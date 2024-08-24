@@ -2,7 +2,7 @@ import os
 import logging
 import requests
 
-from typing import List, Union
+from typing import Union
 
 from apps.ollama.main import (
     generate_ollama_embeddings,
@@ -142,7 +142,7 @@ def merge_and_sort_query_results(query_results, k, reverse=False):
 
 
 def query_collection(
-    collection_names: List[str],
+    collection_names: list[str],
     query: str,
     embedding_function,
     k: int,
@@ -157,13 +157,13 @@ def query_collection(
                 embedding_function=embedding_function,
             )
             results.append(result)
-        except:
+        except Exception:
             pass
     return merge_and_sort_query_results(results, k=k)
 
 
 def query_collection_with_hybrid_search(
-    collection_names: List[str],
+    collection_names: list[str],
     query: str,
     embedding_function,
     k: int,
@@ -182,7 +182,7 @@ def query_collection_with_hybrid_search(
                 r=r,
             )
             results.append(result)
-        except:
+        except Exception:
             pass
     return merge_and_sort_query_results(results, k=k, reverse=True)
 
@@ -294,14 +294,16 @@ def get_rag_context(
 
         extracted_collections.extend(collection_names)
 
-    context_string = ""
-
+    contexts = []
     citations = []
+
     for context in relevant_contexts:
         try:
             if "documents" in context:
-                context_string += "\n\n".join(
-                    [text for text in context["documents"][0] if text is not None]
+                contexts.append(
+                    "\n\n".join(
+                        [text for text in context["documents"][0] if text is not None]
+                    )
                 )
 
                 if "metadatas" in context:
@@ -315,9 +317,7 @@ def get_rag_context(
         except Exception as e:
             log.exception(e)
 
-    context_string = context_string.strip()
-
-    return context_string, citations
+    return contexts, citations
 
 
 def get_model_path(model: str, update_model: bool = False):
@@ -411,7 +411,7 @@ class ChromaRetriever(BaseRetriever):
         query: str,
         *,
         run_manager: CallbackManagerForRetrieverRun,
-    ) -> List[Document]:
+    ) -> list[Document]:
         query_embeddings = self.embedding_function(query)
 
         results = self.collection.query(
@@ -442,8 +442,6 @@ from langchain_core.documents import BaseDocumentCompressor, Document
 from langchain_core.callbacks import Callbacks
 from langchain_core.pydantic_v1 import Extra
 
-from sentence_transformers import util
-
 
 class RerankCompressor(BaseDocumentCompressor):
     embedding_function: Any
@@ -468,6 +466,8 @@ class RerankCompressor(BaseDocumentCompressor):
                 [(query, doc.page_content) for doc in documents]
             )
         else:
+            from sentence_transformers import util
+
             query_embedding = self.embedding_function(query)
             document_embedding = self.embedding_function(
                 [doc.page_content for doc in documents]

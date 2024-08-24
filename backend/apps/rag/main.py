@@ -13,7 +13,7 @@ import os, shutil, logging, re
 from datetime import datetime
 
 from pathlib import Path
-from typing import List, Union, Sequence, Iterator, Any
+from typing import Union, Sequence, Iterator, Any
 
 from chromadb.utils.batch_utils import create_batches
 from langchain_core.documents import Document
@@ -47,8 +47,6 @@ from typing import Optional
 import mimetypes
 import uuid
 import json
-
-import sentence_transformers
 
 from apps.webui.models.documents import (
     Documents,
@@ -93,6 +91,8 @@ from config import (
     SRC_LOG_LEVELS,
     UPLOAD_DIR,
     DOCS_DIR,
+    CONTENT_EXTRACTION_ENGINE,
+    TIKA_SERVER_URL,
     RAG_TOP_K,
     RAG_RELEVANCE_THRESHOLD,
     RAG_EMBEDDING_ENGINE,
@@ -129,6 +129,7 @@ from config import (
     RAG_WEB_SEARCH_RESULT_COUNT,
     RAG_WEB_SEARCH_CONCURRENT_REQUESTS,
     RAG_EMBEDDING_OPENAI_BATCH_SIZE,
+    CORS_ALLOW_ORIGIN,
 )
 
 from constants import ERROR_MESSAGES
@@ -147,6 +148,9 @@ app.state.config.ENABLE_RAG_HYBRID_SEARCH = ENABLE_RAG_HYBRID_SEARCH
 app.state.config.ENABLE_RAG_WEB_LOADER_SSL_VERIFICATION = (
     ENABLE_RAG_WEB_LOADER_SSL_VERIFICATION
 )
+
+app.state.config.CONTENT_EXTRACTION_ENGINE = CONTENT_EXTRACTION_ENGINE
+app.state.config.TIKA_SERVER_URL = TIKA_SERVER_URL
 
 app.state.config.CHUNK_SIZE = CHUNK_SIZE
 app.state.config.CHUNK_OVERLAP = CHUNK_OVERLAP
@@ -190,6 +194,8 @@ def update_embedding_model(
     update_model: bool = False,
 ):
     if embedding_model and app.state.config.RAG_EMBEDDING_ENGINE == "":
+        import sentence_transformers
+
         app.state.sentence_transformer_ef = sentence_transformers.SentenceTransformer(
             get_model_path(embedding_model, update_model),
             device=DEVICE_TYPE,
@@ -204,6 +210,8 @@ def update_reranking_model(
     update_model: bool = False,
 ):
     if reranking_model:
+        import sentence_transformers
+
         app.state.sentence_transformer_rf = sentence_transformers.CrossEncoder(
             get_model_path(reranking_model, update_model),
             device=DEVICE_TYPE,
@@ -233,12 +241,9 @@ app.state.EMBEDDING_FUNCTION = get_embedding_function(
     app.state.config.RAG_EMBEDDING_OPENAI_BATCH_SIZE,
 )
 
-origins = ["*"]
-
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=CORS_ALLOW_ORIGIN,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -369,7 +374,7 @@ async def update_reranking_config(
     try:
         app.state.config.RAG_RERANKING_MODEL = form_data.reranking_model
 
-        update_reranking_model(app.state.config.RAG_RERANKING_MODEL), True
+        update_reranking_model(app.state.config.RAG_RERANKING_MODEL, True)
 
         return {
             "status": True,
@@ -388,6 +393,10 @@ async def get_rag_config(user=Depends(get_admin_user)):
     return {
         "status": True,
         "pdf_extract_images": app.state.config.PDF_EXTRACT_IMAGES,
+        "content_extraction": {
+            "engine": app.state.config.CONTENT_EXTRACTION_ENGINE,
+            "tika_server_url": app.state.config.TIKA_SERVER_URL,
+        },
         "chunk": {
             "chunk_size": app.state.config.CHUNK_SIZE,
             "chunk_overlap": app.state.config.CHUNK_OVERLAP,
@@ -417,13 +426,18 @@ async def get_rag_config(user=Depends(get_admin_user)):
     }
 
 
+class ContentExtractionConfig(BaseModel):
+    engine: str = ""
+    tika_server_url: Optional[str] = None
+
+
 class ChunkParamUpdateForm(BaseModel):
     chunk_size: int
     chunk_overlap: int
 
 
 class YoutubeLoaderConfig(BaseModel):
-    language: List[str]
+    language: list[str]
     translation: Optional[str] = None
 
 
@@ -450,6 +464,7 @@ class WebConfig(BaseModel):
 
 class ConfigUpdateForm(BaseModel):
     pdf_extract_images: Optional[bool] = None
+    content_extraction: Optional[ContentExtractionConfig] = None
     chunk: Optional[ChunkParamUpdateForm] = None
     youtube: Optional[YoutubeLoaderConfig] = None
     web: Optional[WebConfig] = None
@@ -462,6 +477,11 @@ async def update_rag_config(form_data: ConfigUpdateForm, user=Depends(get_admin_
         if form_data.pdf_extract_images is not None
         else app.state.config.PDF_EXTRACT_IMAGES
     )
+
+    if form_data.content_extraction is not None:
+        log.info(f"Updating text settings: {form_data.content_extraction}")
+        app.state.config.CONTENT_EXTRACTION_ENGINE = form_data.content_extraction.engine
+        app.state.config.TIKA_SERVER_URL = form_data.content_extraction.tika_server_url
 
     if form_data.chunk is not None:
         app.state.config.CHUNK_SIZE = form_data.chunk.chunk_size
@@ -499,6 +519,10 @@ async def update_rag_config(form_data: ConfigUpdateForm, user=Depends(get_admin_
     return {
         "status": True,
         "pdf_extract_images": app.state.config.PDF_EXTRACT_IMAGES,
+        "content_extraction": {
+            "engine": app.state.config.CONTENT_EXTRACTION_ENGINE,
+            "tika_server_url": app.state.config.TIKA_SERVER_URL,
+        },
         "chunk": {
             "chunk_size": app.state.config.CHUNK_SIZE,
             "chunk_overlap": app.state.config.CHUNK_OVERLAP,
@@ -616,7 +640,7 @@ def query_doc_handler(
 
 
 class QueryCollectionsForm(BaseModel):
-    collection_names: List[str]
+    collection_names: list[str]
     query: str
     k: Optional[int] = None
     r: Optional[float] = None
@@ -904,7 +928,9 @@ def store_web_search(form_data: SearchForm, user=Depends(get_verified_user)):
         )
 
 
-def store_data_in_vector_db(data, collection_name, overwrite: bool = False) -> bool:
+def store_data_in_vector_db(
+    data, collection_name, metadata: Optional[dict] = None, overwrite: bool = False
+) -> bool:
 
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=app.state.config.CHUNK_SIZE,
@@ -916,7 +942,7 @@ def store_data_in_vector_db(data, collection_name, overwrite: bool = False) -> b
 
     if len(docs) > 0:
         log.info(f"store_data_in_vector_db {docs}")
-        return store_docs_in_vector_db(docs, collection_name, overwrite), None
+        return store_docs_in_vector_db(docs, collection_name, metadata, overwrite), None
     else:
         raise ValueError(ERROR_MESSAGES.EMPTY_CONTENT)
 
@@ -930,14 +956,16 @@ def store_text_in_vector_db(
         add_start_index=True,
     )
     docs = text_splitter.create_documents([text], metadatas=[metadata])
-    return store_docs_in_vector_db(docs, collection_name, overwrite)
+    return store_docs_in_vector_db(docs, collection_name, overwrite=overwrite)
 
 
-def store_docs_in_vector_db(docs, collection_name, overwrite: bool = False) -> bool:
+def store_docs_in_vector_db(
+    docs, collection_name, metadata: Optional[dict] = None, overwrite: bool = False
+) -> bool:
     log.info(f"store_docs_in_vector_db {docs} {collection_name}")
 
     texts = [doc.page_content for doc in docs]
-    metadatas = [doc.metadata for doc in docs]
+    metadatas = [{**doc.metadata, **(metadata if metadata else {})} for doc in docs]
 
     # ChromaDB does not like datetime formats
     # for meta-data so convert them to string.
@@ -978,11 +1006,47 @@ def store_docs_in_vector_db(docs, collection_name, overwrite: bool = False) -> b
 
         return True
     except Exception as e:
-        log.exception(e)
         if e.__class__.__name__ == "UniqueConstraintError":
             return True
 
+        log.exception(e)
+
         return False
+
+
+class TikaLoader:
+    def __init__(self, file_path, mime_type=None):
+        self.file_path = file_path
+        self.mime_type = mime_type
+
+    def load(self) -> list[Document]:
+        with open(self.file_path, "rb") as f:
+            data = f.read()
+
+        if self.mime_type is not None:
+            headers = {"Content-Type": self.mime_type}
+        else:
+            headers = {}
+
+        endpoint = app.state.config.TIKA_SERVER_URL
+        if not endpoint.endswith("/"):
+            endpoint += "/"
+        endpoint += "tika/text"
+
+        r = requests.put(endpoint, data=data, headers=headers)
+
+        if r.ok:
+            raw_metadata = r.json()
+            text = raw_metadata.get("X-TIKA:content", "<No text content found>")
+
+            if "Content-Type" in raw_metadata:
+                headers["Content-Type"] = raw_metadata["Content-Type"]
+
+            log.info("Tika extracted text: %s", text)
+
+            return [Document(page_content=text, metadata=headers)]
+        else:
+            raise Exception(f"Error calling Tika: {r.reason}")
 
 
 def get_loader(filename: str, file_content_type: str, file_path: str):
@@ -1033,49 +1097,67 @@ def get_loader(filename: str, file_content_type: str, file_path: str):
         "vue",
         "svelte",
         "msg",
+        "ex",
+        "exs",
+        "erl",
+        "tsx",
+        "jsx",
+        "hs",
+        "lhs",
     ]
 
-    if file_ext == "pdf":
-        loader = PyPDFLoader(
-            file_path, extract_images=app.state.config.PDF_EXTRACT_IMAGES
-        )
-    elif file_ext == "csv":
-        loader = CSVLoader(file_path)
-    elif file_ext == "rst":
-        loader = UnstructuredRSTLoader(file_path, mode="elements")
-    elif file_ext == "xml":
-        loader = UnstructuredXMLLoader(file_path)
-    elif file_ext in ["htm", "html"]:
-        loader = BSHTMLLoader(file_path, open_encoding="unicode_escape")
-    elif file_ext == "md":
-        loader = UnstructuredMarkdownLoader(file_path)
-    elif file_content_type == "application/epub+zip":
-        loader = UnstructuredEPubLoader(file_path)
-    elif (
-        file_content_type
-        == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        or file_ext in ["doc", "docx"]
+    if (
+        app.state.config.CONTENT_EXTRACTION_ENGINE == "tika"
+        and app.state.config.TIKA_SERVER_URL
     ):
-        loader = Docx2txtLoader(file_path)
-    elif file_content_type in [
-        "application/vnd.ms-excel",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    ] or file_ext in ["xls", "xlsx"]:
-        loader = UnstructuredExcelLoader(file_path)
-    elif file_content_type in [
-        "application/vnd.ms-powerpoint",
-        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-    ] or file_ext in ["ppt", "pptx"]:
-        loader = UnstructuredPowerPointLoader(file_path)
-    elif file_ext == "msg":
-        loader = OutlookMessageLoader(file_path)
-    elif file_ext in known_source_ext or (
-        file_content_type and file_content_type.find("text/") >= 0
-    ):
-        loader = TextLoader(file_path, autodetect_encoding=True)
+        if file_ext in known_source_ext or (
+            file_content_type and file_content_type.find("text/") >= 0
+        ):
+            loader = TextLoader(file_path, autodetect_encoding=True)
+        else:
+            loader = TikaLoader(file_path, file_content_type)
     else:
-        loader = TextLoader(file_path, autodetect_encoding=True)
-        known_type = False
+        if file_ext == "pdf":
+            loader = PyPDFLoader(
+                file_path, extract_images=app.state.config.PDF_EXTRACT_IMAGES
+            )
+        elif file_ext == "csv":
+            loader = CSVLoader(file_path)
+        elif file_ext == "rst":
+            loader = UnstructuredRSTLoader(file_path, mode="elements")
+        elif file_ext == "xml":
+            loader = UnstructuredXMLLoader(file_path)
+        elif file_ext in ["htm", "html"]:
+            loader = BSHTMLLoader(file_path, open_encoding="unicode_escape")
+        elif file_ext == "md":
+            loader = UnstructuredMarkdownLoader(file_path)
+        elif file_content_type == "application/epub+zip":
+            loader = UnstructuredEPubLoader(file_path)
+        elif (
+            file_content_type
+            == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            or file_ext in ["doc", "docx"]
+        ):
+            loader = Docx2txtLoader(file_path)
+        elif file_content_type in [
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ] or file_ext in ["xls", "xlsx"]:
+            loader = UnstructuredExcelLoader(file_path)
+        elif file_content_type in [
+            "application/vnd.ms-powerpoint",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        ] or file_ext in ["ppt", "pptx"]:
+            loader = UnstructuredPowerPointLoader(file_path)
+        elif file_ext == "msg":
+            loader = OutlookMessageLoader(file_path)
+        elif file_ext in known_source_ext or (
+            file_content_type and file_content_type.find("text/") >= 0
+        ):
+            loader = TextLoader(file_path, autodetect_encoding=True)
+        else:
+            loader = TextLoader(file_path, autodetect_encoding=True)
+            known_type = False
 
     return loader, known_type
 
@@ -1101,7 +1183,7 @@ def store_doc(
             f.close()
 
         f = open(file_path, "rb")
-        if collection_name == None:
+        if collection_name is None:
             collection_name = calculate_sha256(f)[:63]
         f.close()
 
@@ -1154,7 +1236,7 @@ def process_doc(
         f = open(file_path, "rb")
 
         collection_name = form_data.collection_name
-        if collection_name == None:
+        if collection_name is None:
             collection_name = calculate_sha256(f)[:63]
         f.close()
 
@@ -1164,13 +1246,21 @@ def process_doc(
         data = loader.load()
 
         try:
-            result = store_data_in_vector_db(data, collection_name)
+            result = store_data_in_vector_db(
+                data,
+                collection_name,
+                {
+                    "file_id": form_data.file_id,
+                    "name": file.meta.get("name", file.filename),
+                },
+            )
 
             if result:
                 return {
                     "status": True,
                     "collection_name": collection_name,
                     "known_type": known_type,
+                    "filename": file.meta.get("name", file.filename),
                 }
         except Exception as e:
             raise HTTPException(
@@ -1204,7 +1294,7 @@ def store_text(
 ):
 
     collection_name = form_data.collection_name
-    if collection_name == None:
+    if collection_name is None:
         collection_name = calculate_sha256_string(form_data.content)
 
     result = store_text_in_vector_db(
@@ -1247,7 +1337,7 @@ def scan_docs_dir(user=Depends(get_admin_user)):
                         sanitized_filename = sanitize_filename(filename)
                         doc = Documents.get_doc_by_name(sanitized_filename)
 
-                        if doc == None:
+                        if doc is None:
                             doc = Documents.insert_new_doc(
                                 user.id,
                                 DocumentForm(

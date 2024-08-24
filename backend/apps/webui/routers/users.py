@@ -1,7 +1,7 @@
 from fastapi import Response, Request
 from fastapi import Depends, FastAPI, HTTPException, status
 from datetime import datetime, timedelta
-from typing import List, Union, Optional
+from typing import Union, Optional
 
 from fastapi import APIRouter
 from pydantic import BaseModel
@@ -39,7 +39,7 @@ router = APIRouter()
 ############################
 
 
-@router.get("/", response_model=List[UserModel])
+@router.get("/", response_model=list[UserModel])
 async def get_users(skip: int = 0, limit: int = 50, user=Depends(get_admin_user)):
     return Users.get_users(skip, limit)
 
@@ -138,7 +138,7 @@ async def get_user_info_by_session_user(user=Depends(get_verified_user)):
 
 
 @router.post("/user/info/update", response_model=Optional[dict])
-async def update_user_settings_by_session_user(
+async def update_user_info_by_session_user(
     form_data: dict, user=Depends(get_verified_user)
 ):
     user = Users.get_user_by_id(user.id)
@@ -205,7 +205,9 @@ async def get_user_by_id(user_id: str, user=Depends(get_verified_user)):
 
 @router.post("/{user_id}/update", response_model=Optional[UserModel])
 async def update_user_by_id(
-    user_id: str, form_data: UserUpdateForm, session_user=Depends(get_admin_user)
+    user_id: str,
+    form_data: UserUpdateForm,
+    session_user=Depends(get_admin_user),
 ):
     user = Users.get_user_by_id(user_id)
 

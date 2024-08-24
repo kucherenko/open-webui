@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { models, showSettings, settings, user, mobile } from '$lib/stores';
+	import { models, showSettings, settings, user, mobile, config } from '$lib/stores';
 	import { onMount, tick, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import Selector from './ModelSelector/Selector.svelte';
@@ -34,7 +34,7 @@
 	}
 </script>
 
-<div class="flex flex-col w-full items-center md:items-start">
+<div class="flex flex-col w-full items-start">
 	{#each selectedModels as selectedModel, selectedModelIdx}
 		<div class="flex w-full max-w-fit">
 			<div class="overflow-hidden w-full">
@@ -46,6 +46,9 @@
 							label: model.name,
 							model: model
 						}))}
+						showTemporaryChatControl={$user.role === 'user'
+							? ($config?.permissions?.chat?.temporary ?? true)
+							: true}
 						bind:value={selectedModel}
 					/>
 				</div>
@@ -103,7 +106,7 @@
 </div>
 
 {#if showSetDefault && !$mobile}
-	<div class="text-left mt-0.5 ml-1 text-[0.7rem] text-gray-500">
+	<div class="text-left mt-0.5 ml-1 text-[0.7rem] text-gray-500 font-primary">
 		<button on:click={saveDefaultModel}> {$i18n.t('Set as default')}</button>
 	</div>
 {/if}

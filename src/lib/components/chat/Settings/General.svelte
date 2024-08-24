@@ -17,7 +17,7 @@
 	let themes = ['dark', 'light', 'rose-pine dark', 'rose-pine-dawn light', 'oled-dark'];
 	let selectedTheme = 'system';
 
-	let languages = [];
+	let languages: Awaited<ReturnType<typeof getLanguages>> = [];
 	let lang = $i18n.language;
 	let notificationEnabled = false;
 	let system = '';
@@ -41,7 +41,7 @@
 
 	// Advanced
 	let requestFormat = '';
-	let keepAlive = null;
+	let keepAlive: string | null = null;
 
 	let params = {
 		// Advanced
@@ -59,7 +59,8 @@
 		num_ctx: null,
 		num_batch: null,
 		num_keep: null,
-		max_tokens: null
+		max_tokens: null,
+		num_gpu: null
 	};
 
 	const toggleRequestFormat = async () => {
@@ -95,6 +96,8 @@
 		}
 
 		if (themeToApply === 'dark' && !_theme.includes('oled')) {
+			document.documentElement.style.setProperty('--color-gray-800', '#333');
+			document.documentElement.style.setProperty('--color-gray-850', '#262626');
 			document.documentElement.style.setProperty('--color-gray-900', '#171717');
 			document.documentElement.style.setProperty('--color-gray-950', '#0d0d0d');
 		}
@@ -118,6 +121,8 @@
 		theme.set(_theme);
 		localStorage.setItem('theme', _theme);
 		if (_theme.includes('oled')) {
+			document.documentElement.style.setProperty('--color-gray-800', '#101010');
+			document.documentElement.style.setProperty('--color-gray-850', '#050505');
 			document.documentElement.style.setProperty('--color-gray-900', '#000000');
 			document.documentElement.style.setProperty('--color-gray-950', '#000000');
 			document.documentElement.classList.add('dark');
@@ -317,7 +322,8 @@
 						max_tokens: params.max_tokens !== null ? params.max_tokens : undefined,
 						use_mmap: params.use_mmap !== null ? params.use_mmap : undefined,
 						use_mlock: params.use_mlock !== null ? params.use_mlock : undefined,
-						num_thread: params.num_thread !== null ? params.num_thread : undefined
+						num_thread: params.num_thread !== null ? params.num_thread : undefined,
+						num_gpu: params.num_gpu !== null ? params.num_gpu : undefined
 					},
 					keepAlive: keepAlive ? (isNaN(keepAlive) ? keepAlive : parseInt(keepAlive)) : undefined
 				});

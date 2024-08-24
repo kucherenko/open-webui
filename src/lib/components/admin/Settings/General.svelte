@@ -1,22 +1,10 @@
 <script lang="ts">
-	import {
-		getCommunitySharingEnabledStatus,
-		getWebhookUrl,
-		toggleCommunitySharingEnabledStatus,
-		updateWebhookUrl
-	} from '$lib/apis';
-	import {
-		getAdminConfig,
-		getDefaultUserRole,
-		getJWTExpiresDuration,
-		getSignUpEnabledStatus,
-		toggleSignUpEnabledStatus,
-		updateAdminConfig,
-		updateDefaultUserRole,
-		updateJWTExpiresDuration
-	} from '$lib/apis/auths';
+	import { getBackendConfig, getWebhookUrl, updateWebhookUrl } from '$lib/apis';
+	import { getAdminConfig, updateAdminConfig } from '$lib/apis/auths';
 	import Switch from '$lib/components/common/Switch.svelte';
+	import { config } from '$lib/stores';
 	import { onMount, getContext } from 'svelte';
+	import { toast } from 'svelte-sonner';
 
 	const i18n = getContext('i18n');
 
@@ -30,7 +18,7 @@
 		const res = await updateAdminConfig(localStorage.token, adminConfig);
 
 		if (res) {
-			toast.success(i18n.t('Settings updated successfully'));
+			saveHandler();
 		} else {
 			toast.error(i18n.t('Failed to update settings'));
 		}
@@ -51,9 +39,8 @@
 
 <form
 	class="flex flex-col h-full justify-between space-y-3 text-sm"
-	on:submit|preventDefault={() => {
+	on:submit|preventDefault={async () => {
 		updateHandler();
-		saveHandler();
 	}}
 >
 	<div class=" space-y-3 overflow-y-scroll scrollbar-hidden h-full">
@@ -98,6 +85,12 @@
 					<Switch bind:state={adminConfig.ENABLE_COMMUNITY_SHARING} />
 				</div>
 
+				<div class="my-3 flex w-full items-center justify-between pr-2">
+					<div class=" self-center text-xs font-medium">{$i18n.t('Enable Message Rating')}</div>
+
+					<Switch bind:state={adminConfig.ENABLE_MESSAGE_RATING} />
+				</div>
+
 				<hr class=" dark:border-gray-850 my-2" />
 
 				<div class=" w-full justify-between">
@@ -107,7 +100,7 @@
 
 					<div class="flex mt-2 space-x-2">
 						<input
-							class="w-full rounded-lg py-2 px-4 text-sm dark:text-gray-300 dark:bg-gray-850 outline-none"
+							class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-none"
 							type="text"
 							placeholder={`e.g.) "30m","1h", "10d". `}
 							bind:value={adminConfig.JWT_EXPIRES_IN}
@@ -131,7 +124,7 @@
 
 					<div class="flex mt-2 space-x-2">
 						<input
-							class="w-full rounded-lg py-2 px-4 text-sm dark:text-gray-300 dark:bg-gray-850 outline-none"
+							class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-none"
 							type="text"
 							placeholder={`https://example.com/webhook`}
 							bind:value={webhookUrl}

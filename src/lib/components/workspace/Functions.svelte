@@ -29,8 +29,11 @@
 	import ManifestModal from './common/ManifestModal.svelte';
 	import Heart from '../icons/Heart.svelte';
 	import DeleteConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
+	import GarbageBin from '../icons/GarbageBin.svelte';
 
 	const i18n = getContext('i18n');
+
+	let shiftKey = false;
 
 	let functionsImportInputElement: HTMLInputElement;
 	let importFiles;
@@ -122,14 +125,47 @@
 
 		if (res) {
 			if (func.is_global) {
-				toast.success($i18n.t('Filter is now globally enabled'));
+				func.type === 'filter'
+					? toast.success($i18n.t('Filter is now globally enabled'))
+					: toast.success($i18n.t('Function is now globally enabled'));
 			} else {
-				toast.success($i18n.t('Filter is now globally disabled'));
+				func.type === 'filter'
+					? toast.success($i18n.t('Filter is now globally disabled'))
+					: toast.success($i18n.t('Function is now globally disabled'));
 			}
 
 			functions.set(await getFunctions(localStorage.token));
+			models.set(await getModels(localStorage.token));
 		}
 	};
+
+	onMount(() => {
+		const onKeyDown = (event) => {
+			if (event.key === 'Shift') {
+				shiftKey = true;
+			}
+		};
+
+		const onKeyUp = (event) => {
+			if (event.key === 'Shift') {
+				shiftKey = false;
+			}
+		};
+
+		const onBlur = () => {
+			shiftKey = false;
+		};
+
+		window.addEventListener('keydown', onKeyDown);
+		window.addEventListener('keyup', onKeyUp);
+		window.addEventListener('blur', onBlur);
+
+		return () => {
+			window.removeEventListener('keydown', onKeyDown);
+			window.removeEventListener('keyup', onKeyUp);
+			window.removeEventListener('blur', onBlur);
+		};
+	});
 </script>
 
 <svelte:head>
@@ -200,14 +236,14 @@
 					<div class=" flex-1 self-center pl-1">
 						<div class=" font-semibold flex items-center gap-1.5">
 							<div
-								class=" text-xs font-black px-1 rounded uppercase line-clamp-1 bg-gray-500/20 text-gray-700 dark:text-gray-200"
+								class=" text-xs font-bold px-1 rounded uppercase line-clamp-1 bg-gray-500/20 text-gray-700 dark:text-gray-200"
 							>
 								{func.type}
 							</div>
 
 							{#if func?.meta?.manifest?.version}
 								<div
-									class="text-xs font-black px-1 rounded line-clamp-1 bg-gray-500/20 text-gray-700 dark:text-gray-200"
+									class="text-xs font-bold px-1 rounded line-clamp-1 bg-gray-500/20 text-gray-700 dark:text-gray-200"
 								>
 									v{func?.meta?.manifest?.version ?? ''}
 								</div>
@@ -229,87 +265,101 @@
 				</div>
 			</a>
 			<div class="flex flex-row gap-0.5 self-center">
-				{#if func?.meta?.manifest?.funding_url ?? false}
-					<Tooltip content="Support">
+				{#if shiftKey}
+					<Tooltip content={$i18n.t('Delete')}>
+						<button
+							class="self-center w-fit text-sm px-2 py-2 dark:text-gray-300 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
+							type="button"
+							on:click={() => {
+								deleteHandler(func);
+							}}
+						>
+							<GarbageBin />
+						</button>
+					</Tooltip>
+				{:else}
+					{#if func?.meta?.manifest?.funding_url ?? false}
+						<Tooltip content={$i18n.t('Support')}>
+							<button
+								class="self-center w-fit text-sm px-2 py-2 dark:text-gray-300 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
+								type="button"
+								on:click={() => {
+									selectedFunction = func;
+									showManifestModal = true;
+								}}
+							>
+								<Heart />
+							</button>
+						</Tooltip>
+					{/if}
+
+					<Tooltip content={$i18n.t('Valves')}>
 						<button
 							class="self-center w-fit text-sm px-2 py-2 dark:text-gray-300 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
 							type="button"
 							on:click={() => {
 								selectedFunction = func;
-								showManifestModal = true;
+								showValvesModal = true;
 							}}
 						>
-							<Heart />
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke-width="1.5"
+								stroke="currentColor"
+								class="size-4"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"
+								/>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+								/>
+							</svg>
 						</button>
 					</Tooltip>
+
+					<FunctionMenu
+						{func}
+						editHandler={() => {
+							goto(`/workspace/functions/edit?id=${encodeURIComponent(func.id)}`);
+						}}
+						shareHandler={() => {
+							shareHandler(func);
+						}}
+						cloneHandler={() => {
+							cloneHandler(func);
+						}}
+						exportHandler={() => {
+							exportHandler(func);
+						}}
+						deleteHandler={async () => {
+							selectedFunction = func;
+							showDeleteConfirm = true;
+						}}
+						toggleGlobalHandler={() => {
+							if (['filter', 'action'].includes(func.type)) {
+								toggleGlobalHandler(func);
+							}
+						}}
+						onClose={() => {}}
+					>
+						<button
+							class="self-center w-fit text-sm p-1.5 dark:text-gray-300 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
+							type="button"
+						>
+							<EllipsisHorizontal className="size-5" />
+						</button>
+					</FunctionMenu>
 				{/if}
 
-				<Tooltip content="Valves">
-					<button
-						class="self-center w-fit text-sm px-2 py-2 dark:text-gray-300 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
-						type="button"
-						on:click={() => {
-							selectedFunction = func;
-							showValvesModal = true;
-						}}
-					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							fill="none"
-							viewBox="0 0 24 24"
-							stroke-width="1.5"
-							stroke="currentColor"
-							class="size-4"
-						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"
-							/>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-							/>
-						</svg>
-					</button>
-				</Tooltip>
-
-				<FunctionMenu
-					{func}
-					editHandler={() => {
-						goto(`/workspace/functions/edit?id=${encodeURIComponent(func.id)}`);
-					}}
-					shareHandler={() => {
-						shareHandler(func);
-					}}
-					cloneHandler={() => {
-						cloneHandler(func);
-					}}
-					exportHandler={() => {
-						exportHandler(func);
-					}}
-					deleteHandler={async () => {
-						selectedFunction = func;
-						showDeleteConfirm = true;
-					}}
-					toggleGlobalHandler={() => {
-						if (func.type === 'filter') {
-							toggleGlobalHandler(func);
-						}
-					}}
-					onClose={() => {}}
-				>
-					<button
-						class="self-center w-fit text-sm p-1.5 dark:text-gray-300 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
-						type="button"
-					>
-						<EllipsisHorizontal className="size-5" />
-					</button>
-				</FunctionMenu>
-
 				<div class=" self-center mx-1">
-					<Tooltip content={func.is_active ? 'Enabled' : 'Disabled'}>
+					<Tooltip content={func.is_active ? $i18n.t('Enabled') : $i18n.t('Disabled')}>
 						<Switch
 							bind:state={func.is_active}
 							on:change={async (e) => {
@@ -430,7 +480,7 @@
 		</div>
 
 		<div class=" self-center">
-			<div class=" font-bold line-clamp-1">{$i18n.t('Discover a function')}</div>
+			<div class=" font-semibold line-clamp-1">{$i18n.t('Discover a function')}</div>
 			<div class=" text-sm line-clamp-1">
 				{$i18n.t('Discover, download, and explore custom functions')}
 			</div>
@@ -489,15 +539,15 @@
 			<div>Please carefully review the following warnings:</div>
 
 			<ul class=" mt-1 list-disc pl-4 text-xs">
-				<li>Functions allow arbitrary code execution.</li>
-				<li>Do not install functions from sources you do not fully trust.</li>
+				<li>{$i18n.t('Functions allow arbitrary code execution.')}</li>
+				<li>{$i18n.t('Do not install functions from sources you do not fully trust.')}</li>
 			</ul>
 		</div>
 
 		<div class="my-3">
-			I acknowledge that I have read and I understand the implications of my action. I am aware of
-			the risks associated with executing arbitrary code and I have verified the trustworthiness of
-			the source.
+			{$i18n.t(
+				'I acknowledge that I have read and I understand the implications of my action. I am aware of the risks associated with executing arbitrary code and I have verified the trustworthiness of the source.'
+			)}
 		</div>
 	</div>
 </ConfirmDialog>

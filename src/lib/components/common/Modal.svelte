@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 
 	import { flyAndScale } from '$lib/utils/transitions';
@@ -47,6 +47,13 @@
 		document.body.removeChild(modalElement);
 		document.body.style.overflow = 'unset';
 	}
+
+	onDestroy(() => {
+		show = false;
+		if (modalElement) {
+			document.body.removeChild(modalElement);
+		}
+	});
 </script>
 
 {#if show}
@@ -63,7 +70,7 @@
 		<div
 			class=" m-auto rounded-2xl max-w-full {sizeToWidth(
 				size
-			)} mx-2 bg-gray-50 dark:bg-gray-900 shadow-3xl"
+			)} mx-2 bg-gray-50 dark:bg-gray-900 shadow-3xl max-h-[100dvh] overflow-y-auto scrollbar-hidden"
 			in:flyAndScale
 			on:mousedown={(e) => {
 				e.stopPropagation();
