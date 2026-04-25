@@ -27,8 +27,6 @@ stable-diffusion-webui:
         export HOME=/root-home
         rm -rf $${HOME}/.cache
         /docker/entrypoint.sh python -u webui.py --listen --port $${WEBUI_PORT:-7860} --skip-version-check $${CLI_ARGS}
-    volumes: [a1111:/empty.pt]
-    
 
   open-webui:
     build:
