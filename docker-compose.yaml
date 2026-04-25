@@ -25,7 +25,7 @@ services:
       - -c
       - export HOME=/root-home && rm -rf $${HOME}/.cache && /docker/entrypoint.sh python -u webui.py --listen --port $${WEBUI_PORT:-7860} --skip-version-check $${CLI_ARGS}
     volumes:
-      - a1111:/empty.pt
+      - - ./test/test_files/image_gen/sd-empty.pt:/empty.pt
 
   open-webui:
     build:
