@@ -8,7 +8,7 @@ services:
     restart: unless-stopped
     image: ollama/ollama:${OLLAMA_DOCKER_TAG-latest}
 
-stable-diffusion-webui:
+  stable-diffusion-webui:
     # Not built for ARM64
     platform: linux/amd64
     image: ghcr.io/neggles/sd-webui-docker:latest
@@ -23,10 +23,9 @@ stable-diffusion-webui:
     entrypoint: /bin/bash
     command:
       - -c
-      - |
-        export HOME=/root-home
-        rm -rf $${HOME}/.cache
-        /docker/entrypoint.sh python -u webui.py --listen --port $${WEBUI_PORT:-7860} --skip-version-check $${CLI_ARGS}
+      - export HOME=/root-home && rm -rf $${HOME}/.cache && /docker/entrypoint.sh python -u webui.py --listen --port $${WEBUI_PORT:-7860} --skip-version-check $${CLI_ARGS}
+    volumes:
+      - a1111:/empty.pt
 
   open-webui:
     build:
