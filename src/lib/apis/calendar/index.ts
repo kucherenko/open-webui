@@ -97,29 +97,10 @@ export const updateCalendar = async (
 };
 
 export const deleteCalendar = async (token: string, calendarId: string): Promise<boolean> => {
-	let error = null;
-
-	const res = await fetch(`${WEBUI_API_BASE_URL}/calendars/${calendarId}/delete`, {
+	const res = await apiRequest(`${WEBUI_API_BASE_URL}/calendars/${calendarId}/delete`, {
 		method: 'DELETE',
-		headers: {
-			Accept: 'application/json',
-			'Content-Type': 'application/json',
-			authorization: `Bearer ${token}`
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			error = err.detail;
-			console.error(err);
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
+		token
+	});
 
 	return res?.status ?? false;
 };
@@ -183,29 +164,10 @@ export const updateCalendarEvent = async (
 };
 
 export const deleteCalendarEvent = async (token: string, eventId: string): Promise<boolean> => {
-	let error = null;
-
-	const res = await fetch(`${WEBUI_API_BASE_URL}/calendars/events/${eventId}/delete`, {
+	const res = await apiRequest(`${WEBUI_API_BASE_URL}/calendars/events/${eventId}/delete`, {
 		method: 'DELETE',
-		headers: {
-			Accept: 'application/json',
-			'Content-Type': 'application/json',
-			authorization: `Bearer ${token}`
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			error = err.detail;
-			console.error(err);
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
+		token
+	});
 
 	return res?.status ?? false;
 };

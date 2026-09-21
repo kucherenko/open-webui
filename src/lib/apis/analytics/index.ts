@@ -111,8 +111,6 @@ export const getModelChats = async (
 	orderBy: string | null = null,
 	direction: string | null = null
 ) => {
-	let error = null;
-
 	const searchParams = new URLSearchParams();
 	if (startDate) searchParams.append('start_date', startDate.toString());
 	if (endDate) searchParams.append('end_date', endDate.toString());
@@ -121,64 +119,18 @@ export const getModelChats = async (
 	if (orderBy) searchParams.append('order_by', orderBy);
 	if (direction) searchParams.append('direction', direction);
 
-	const res = await fetch(
+	return apiRequest(
 		`${WEBUI_API_BASE_URL}/analytics/models/${encodeURIComponent(modelId)}/chats?${searchParams.toString()}`,
-		{
-			method: 'GET',
-			headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/json',
-				authorization: `Bearer ${token}`
-			}
-		}
-	)
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			error = err.detail;
-			console.error(err);
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+		{ token }
+	);
 };
 
 export const getModelOverview = async (token: string = '', modelId: string, days: number = 30) => {
-	let error = null;
-
 	const searchParams = new URLSearchParams();
 	searchParams.append('days', days.toString());
 
-	const res = await fetch(
+	return apiRequest(
 		`${WEBUI_API_BASE_URL}/analytics/models/${encodeURIComponent(modelId)}/overview?${searchParams.toString()}`,
-		{
-			method: 'GET',
-			headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/json',
-				authorization: `Bearer ${token}`
-			}
-		}
-	)
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			error = err.detail;
-			console.error(err);
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+		{ token }
+	);
 };

@@ -110,8 +110,6 @@ export const getSharedFolderChats = async (
 		sortDir?: 'asc' | 'desc';
 	} = {}
 ) => {
-	let error = null;
-
 	const searchParams = new URLSearchParams();
 	if (params.page !== undefined && params.page !== null) {
 		searchParams.append('page', `${params.page}`);
@@ -124,29 +122,8 @@ export const getSharedFolderChats = async (
 	}
 	const query = searchParams.toString();
 
-	const res = await fetch(
+	return apiRequest(
 		`${WEBUI_API_BASE_URL}/folders/${folderId}/shared/chats${query ? `?${query}` : ''}`,
-		{
-			method: 'GET',
-			headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/json',
-				authorization: `Bearer ${token}`
-			}
-		}
-	)
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			error = err.detail;
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+		{ token }
+	);
 };

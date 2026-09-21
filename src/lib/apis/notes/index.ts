@@ -20,32 +20,7 @@ export const createNewNote = async (token: string, note: NoteItem) => {
 };
 
 export const getNotes = async (token: string = '', raw: boolean = false) => {
-	let error = null;
-
-	const res = await fetch(`${WEBUI_API_BASE_URL}/notes/`, {
-		method: 'GET',
-		headers: {
-			Accept: 'application/json',
-			'Content-Type': 'application/json',
-			authorization: `Bearer ${token}`
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.then((json) => {
-			return json;
-		})
-		.catch((err) => {
-			error = err.detail;
-			console.error(err);
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
+	const res = await apiRequest(`${WEBUI_API_BASE_URL}/notes/`, { token });
 
 	if (raw) {
 		return res; // Return raw response if requested
@@ -80,7 +55,6 @@ export const searchNotes = async (
 	page: number | null = null,
 	direction: string | null = null
 ) => {
-	let error = null;
 	const searchParams = new URLSearchParams();
 
 	if (query !== null) {
@@ -107,68 +81,17 @@ export const searchNotes = async (
 		searchParams.append('page', `${page}`);
 	}
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/notes/search?${searchParams.toString()}`, {
-		method: 'GET',
-		headers: {
-			Accept: 'application/json',
-			'Content-Type': 'application/json',
-			authorization: `Bearer ${token}`
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.then((json) => {
-			return json;
-		})
-		.catch((err) => {
-			error = err.detail;
-			console.error(err);
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+	return apiRequest(`${WEBUI_API_BASE_URL}/notes/search?${searchParams.toString()}`, { token });
 };
 
 export const getNoteList = async (token: string = '', page: number | null = null) => {
-	let error = null;
 	const searchParams = new URLSearchParams();
 
 	if (page !== null) {
 		searchParams.append('page', `${page}`);
 	}
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/notes/?${searchParams.toString()}`, {
-		method: 'GET',
-		headers: {
-			Accept: 'application/json',
-			'Content-Type': 'application/json',
-			authorization: `Bearer ${token}`
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.then((json) => {
-			return json;
-		})
-		.catch((err) => {
-			error = err.detail;
-			console.error(err);
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+	return apiRequest(`${WEBUI_API_BASE_URL}/notes/?${searchParams.toString()}`, { token });
 };
 
 export const getNoteById = async (token: string, id: string) => {
@@ -212,59 +135,15 @@ export const getNoteChatById = async (token: string, id: string) => {
 };
 
 export const getNoteChatsById = async (token: string, id: string) => {
-	let error = null;
 	const url = `${WEBUI_API_BASE_URL}/notes/${id}/chats`;
 
-	const res = await fetch(url, {
-		method: 'GET',
-		headers: {
-			Accept: 'application/json',
-			'Content-Type': 'application/json',
-			authorization: `Bearer ${token}`
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			error = err.detail;
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+	return apiRequest(url, { token });
 };
 
 export const createNoteChatById = async (token: string, id: string) => {
-	let error = null;
 	const url = `${WEBUI_API_BASE_URL}/notes/${id}/chat`;
 
-	const res = await fetch(url, {
-		method: 'POST',
-		headers: {
-			Accept: 'application/json',
-			'Content-Type': 'application/json',
-			authorization: `Bearer ${token}`
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			error = err.detail;
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+	return apiRequest(url, { method: 'POST', token });
 };
 
 export const updateNoteById = async (token: string, id: string, note: NoteItem) => {
@@ -290,32 +169,7 @@ export const deleteNoteById = async (token: string, id: string) => {
 };
 
 export const getPinnedNoteList = async (token: string = '') => {
-	let error = null;
-
-	const res = await fetch(`${WEBUI_API_BASE_URL}/notes/pinned`, {
-		method: 'GET',
-		headers: {
-			Accept: 'application/json',
-			'Content-Type': 'application/json',
-			authorization: `Bearer ${token}`
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.then((json) => {
-			return json;
-		})
-		.catch((err) => {
-			error = err.detail;
-			console.error(err);
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
+	const res = await apiRequest(`${WEBUI_API_BASE_URL}/notes/pinned`, { token });
 
 	return res ?? [];
 };

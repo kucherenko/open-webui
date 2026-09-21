@@ -197,33 +197,11 @@ export const unloadProviderModel = async (
 };
 
 export const deleteProviderModel = async (token: string, urlIdx: number, model: string) => {
-	let error = null;
-
-	const res = await fetch(
-		`${OPENAI_API_BASE_URL}/models/${urlIdx}?${new URLSearchParams({ model })}`,
-		{
-			method: 'DELETE',
-			headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${token}`
-			}
-		}
-	)
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			error = getErrorMessage(err);
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+	return apiRequest(`${OPENAI_API_BASE_URL}/models/${urlIdx}?${new URLSearchParams({ model })}`, {
+		method: 'DELETE',
+		token,
+		getError: getErrorMessage
+	});
 };
 
 export const verifyOpenAIConnection = async (

@@ -32,31 +32,10 @@ export const getModels = async (
 		searchParams.append('refresh', 'true');
 	}
 
-	let error = null;
-	const res = await fetch(
+	const res = await apiRequest(
 		`${WEBUI_BASE_URL}/api/models${base ? '/base' : ''}?${searchParams.toString()}`,
-		{
-			method: 'GET',
-			headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/json',
-				...(token && { authorization: `Bearer ${token}` })
-			}
-		}
-	)
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			error = err;
-			console.error(err);
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
+		{ token, getError: (err) => err }
+	);
 
 	let models = res?.data ?? [];
 
@@ -1107,29 +1086,10 @@ export const generateMoACompletion = async (
 };
 
 export const getPipelinesList = async (token: string = '') => {
-	let error = null;
-
-	const res = await fetch(`${WEBUI_BASE_URL}/api/v1/pipelines/list`, {
-		method: 'GET',
-		headers: {
-			Accept: 'application/json',
-			'Content-Type': 'application/json',
-			...(token && { authorization: `Bearer ${token}` })
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			console.error(err);
-			error = err;
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
+	const res = await apiRequest(`${WEBUI_BASE_URL}/api/v1/pipelines/list`, {
+		token,
+		getError: (err) => err
+	});
 
 	const pipelines = res?.data ?? [];
 	return pipelines;
@@ -1245,109 +1205,42 @@ export const deletePipeline = async (token: string, id: string, urlIdx: string) 
 };
 
 export const getPipelines = async (token: string, urlIdx?: string) => {
-	let error = null;
-
 	const searchParams = new URLSearchParams();
 	if (urlIdx !== undefined) {
 		searchParams.append('urlIdx', urlIdx);
 	}
 
-	const res = await fetch(`${WEBUI_BASE_URL}/api/v1/pipelines/?${searchParams.toString()}`, {
-		method: 'GET',
-		headers: {
-			Accept: 'application/json',
-			'Content-Type': 'application/json',
-			...(token && { authorization: `Bearer ${token}` })
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			console.error(err);
-			error = err;
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
+	const res = await apiRequest(`${WEBUI_BASE_URL}/api/v1/pipelines/?${searchParams.toString()}`, {
+		token,
+		getError: (err) => err
+	});
 
 	const pipelines = res?.data ?? [];
 	return pipelines;
 };
 
 export const getPipelineValves = async (token: string, pipeline_id: string, urlIdx: string) => {
-	let error = null;
-
 	const searchParams = new URLSearchParams();
 	if (urlIdx !== undefined) {
 		searchParams.append('urlIdx', urlIdx);
 	}
 
-	const res = await fetch(
+	return apiRequest(
 		`${WEBUI_BASE_URL}/api/v1/pipelines/${pipeline_id}/valves?${searchParams.toString()}`,
-		{
-			method: 'GET',
-			headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/json',
-				...(token && { authorization: `Bearer ${token}` })
-			}
-		}
-	)
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			console.error(err);
-			error = err;
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+		{ token, getError: (err) => err }
+	);
 };
 
 export const getPipelineValvesSpec = async (token: string, pipeline_id: string, urlIdx: string) => {
-	let error = null;
-
 	const searchParams = new URLSearchParams();
 	if (urlIdx !== undefined) {
 		searchParams.append('urlIdx', urlIdx);
 	}
 
-	const res = await fetch(
+	return apiRequest(
 		`${WEBUI_BASE_URL}/api/v1/pipelines/${pipeline_id}/valves/spec?${searchParams.toString()}`,
-		{
-			method: 'GET',
-			headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/json',
-				...(token && { authorization: `Bearer ${token}` })
-			}
-		}
-	)
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			console.error(err);
-			error = err;
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+		{ token, getError: (err) => err }
+	);
 };
 
 export const updatePipelineValves = async (

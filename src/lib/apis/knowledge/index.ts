@@ -61,35 +61,11 @@ export const testExternalKnowledgeRetrieval = async (
 	id: string,
 	payload: object
 ) => {
-	let error = null;
-
-	const res = await fetch(
-		`${WEBUI_API_BASE_URL}/knowledge/external/connections/${id}/retrieve-test`,
-		{
-			method: 'POST',
-			headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/json',
-				authorization: `Bearer ${token}`
-			},
-			body: JSON.stringify(payload)
-		}
-	)
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			error = err.detail;
-			console.error(err);
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+	return apiRequest(`${WEBUI_API_BASE_URL}/knowledge/external/connections/${id}/retrieve-test`, {
+		method: 'POST',
+		token,
+		body: payload
+	});
 };
 
 export const testExternalKnowledgeSource = async (token: string, payload: object) => {
@@ -160,8 +136,6 @@ export const searchKnowledgeFiles = async (
 	page: number = 1,
 	includeContent: boolean = false
 ) => {
-	let error = null;
-
 	const searchParams = new URLSearchParams();
 	if (query) searchParams.append('query', query);
 	if (viewOption) searchParams.append('view_option', viewOption);
@@ -170,36 +144,9 @@ export const searchKnowledgeFiles = async (
 	searchParams.append('page', page.toString());
 	if (includeContent) searchParams.append('include_content', 'true');
 
-	const res = await fetch(
-		`${WEBUI_API_BASE_URL}/knowledge/search/files?${searchParams.toString()}`,
-		{
-			method: 'GET',
-			headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/json',
-				authorization: `Bearer ${token}`
-			}
-		}
-	)
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.then((json) => {
-			return json;
-		})
-		.catch((err) => {
-			error = err.detail;
-
-			console.error(err);
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+	return apiRequest(`${WEBUI_API_BASE_URL}/knowledge/search/files?${searchParams.toString()}`, {
+		token
+	});
 };
 
 export const getKnowledgeById = async (token: string, id: string) => {
@@ -217,8 +164,6 @@ export const searchKnowledgeFilesById = async (
 	directoryId?: string | null,
 	includeContent: boolean = false
 ) => {
-	let error = null;
-
 	const searchParams = new URLSearchParams();
 	if (query) searchParams.append('query', query);
 	if (viewOption) searchParams.append('view_option', viewOption);
@@ -231,36 +176,9 @@ export const searchKnowledgeFilesById = async (
 	}
 	if (includeContent) searchParams.append('include_content', 'true');
 
-	const res = await fetch(
-		`${WEBUI_API_BASE_URL}/knowledge/${id}/files?${searchParams.toString()}`,
-		{
-			method: 'GET',
-			headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/json',
-				authorization: `Bearer ${token}`
-			}
-		}
-	)
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.then((json) => {
-			return json;
-		})
-		.catch((err) => {
-			error = err.detail;
-
-			console.error(err);
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+	return apiRequest(`${WEBUI_API_BASE_URL}/knowledge/${id}/files?${searchParams.toString()}`, {
+		token
+	});
 };
 
 export const getPendingKnowledgeFiles = async (token: string, id: string) => {
@@ -479,36 +397,13 @@ export const deleteKnowledgeDirectory = async (
 	dirId: string,
 	moveFiles: boolean = true
 ) => {
-	let error = null;
-
 	const searchParams = new URLSearchParams();
 	searchParams.append('move_files', moveFiles.toString());
 
-	const res = await fetch(
+	return apiRequest(
 		`${WEBUI_API_BASE_URL}/knowledge/${id}/dirs/${dirId}/delete?${searchParams.toString()}`,
-		{
-			method: 'DELETE',
-			headers: {
-				Accept: 'application/json',
-				authorization: `Bearer ${token}`
-			}
-		}
-	)
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			error = err.detail;
-			console.error(err);
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+		{ method: 'DELETE', token }
+	);
 };
 
 export const moveFileInKnowledge = async (

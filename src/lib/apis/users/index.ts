@@ -167,29 +167,10 @@ export const getAllUsers = async (token: string) => {
 };
 
 export const getUserSettings = async (token: string, raw = false) => {
-	let error = null;
-	const res = await fetch(`${WEBUI_API_BASE_URL}/users/user/settings${raw ? '?raw=true' : ''}`, {
-		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${token}`
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			console.error(err);
-			error = err?.detail ?? err;
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+	return apiRequest(`${WEBUI_API_BASE_URL}/users/user/settings${raw ? '?raw=true' : ''}`, {
+		token,
+		getError: (err) => err?.detail ?? err
+	});
 };
 
 export const updateUserSettings = async (token: string, settings: object) => {
@@ -217,29 +198,7 @@ export const updateUserStatus = async (token: string, formData: object) => {
 };
 
 export const getUserInfo = async (token: string) => {
-	let error = null;
-	const res = await fetch(`${WEBUI_API_BASE_URL}/users/user/info`, {
-		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${token}`
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			console.error(err);
-			error = err.detail;
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+	return apiRequest(`${WEBUI_API_BASE_URL}/users/user/info`, { token });
 };
 
 export const updateUserInfo = async (token: string, info: object) => {
@@ -253,29 +212,7 @@ export const updateUserInfo = async (token: string, info: object) => {
 };
 
 export const getUserVariables = async (token: string) => {
-	let error = null;
-	const res = await fetch(`${WEBUI_API_BASE_URL}/users/user/variables`, {
-		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${token}`
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			console.error(err);
-			error = err.detail;
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+	return apiRequest(`${WEBUI_API_BASE_URL}/users/user/variables`, { token });
 };
 
 export const updateUserVariables = async (token: string, variables: Record<string, string>) => {
@@ -394,33 +331,11 @@ export const getUserUsage = async (
 	token: string,
 	options: { days?: number; startDate?: number | null; endDate?: number | null } = {}
 ): Promise<UserUsageResponse | null> => {
-	let error = null;
 	const searchParams = new URLSearchParams();
 
 	if (options.days) searchParams.append('days', options.days.toString());
 	if (options.startDate) searchParams.append('start_date', options.startDate.toString());
 	if (options.endDate) searchParams.append('end_date', options.endDate.toString());
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/users/usage?${searchParams.toString()}`, {
-		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${token}`
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			console.error(err);
-			error = err.detail;
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+	return apiRequest(`${WEBUI_API_BASE_URL}/users/usage?${searchParams.toString()}`, { token });
 };
