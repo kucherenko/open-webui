@@ -1,3 +1,4 @@
+import { apiRequest } from '$lib/apis/request';
 import { WEBUI_BASE_URL } from '$lib/constants';
 import { convertOpenApiToToolPayload } from '$lib/utils';
 import { normalizeTags } from '$lib/utils/tags';
@@ -697,31 +698,7 @@ export const executeToolServer = async (
 };
 
 export const getTaskConfig = async (token: string = '') => {
-	let error = null;
-
-	const res = await fetch(`${WEBUI_BASE_URL}/api/v1/tasks/config`, {
-		method: 'GET',
-		headers: {
-			Accept: 'application/json',
-			'Content-Type': 'application/json',
-			...(token && { authorization: `Bearer ${token}` })
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			console.error(err);
-			error = err;
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+	return apiRequest(`${WEBUI_BASE_URL}/api/v1/tasks/config`, { token, getError: (err) => err });
 };
 
 export const updateTaskConfig = async (token: string, config: object) => {
@@ -1421,30 +1398,7 @@ export const updatePipelineValves = async (
 };
 
 export const getUsage = async (token: string = '') => {
-	let error = null;
-
-	const res = await fetch(`${WEBUI_BASE_URL}/api/usage`, {
-		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json',
-			...(token && { Authorization: `Bearer ${token}` })
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			console.error(err);
-			error = err;
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+	return apiRequest(`${WEBUI_BASE_URL}/api/usage`, { token, getError: (err) => err });
 };
 
 export const getBackendConfig = async () => {
@@ -1527,57 +1481,11 @@ export const getChangelog = async () => {
 };
 
 export const getVersion = async (token: string) => {
-	let error = null;
-
-	const res = await fetch(`${WEBUI_BASE_URL}/api/version`, {
-		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${token}`
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			console.error(err);
-			error = err;
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+	return apiRequest(`${WEBUI_BASE_URL}/api/version`, { token, getError: (err) => err });
 };
 
 export const getVersionUpdates = async (token: string) => {
-	let error = null;
-
-	const res = await fetch(`${WEBUI_BASE_URL}/api/version/updates`, {
-		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${token}`
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			console.error(err);
-			error = err;
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+	return apiRequest(`${WEBUI_BASE_URL}/api/version/updates`, { token, getError: (err) => err });
 };
 
 export type EventCatalogItem = {
@@ -1605,88 +1513,23 @@ export type EventWebhook = {
 export const getEvents = async (
 	token: string
 ): Promise<{ schema: string; events: EventCatalogItem[] }> => {
-	let error = null;
-
-	const res = await fetch(`${WEBUI_BASE_URL}/api/events`, {
-		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${token}`
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			console.error(err);
-			error = err;
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+	return apiRequest(`${WEBUI_BASE_URL}/api/events`, { token, getError: (err) => err });
 };
 
 export const getEventWebhooks = async (token: string): Promise<EventWebhook[]> => {
-	let error = null;
-
-	const res = await fetch(`${WEBUI_BASE_URL}/api/events/webhooks`, {
-		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${token}`
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			console.error(err);
-			error = err;
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+	return apiRequest(`${WEBUI_BASE_URL}/api/events/webhooks`, { token, getError: (err) => err });
 };
 
 export const createEventWebhook = async (
 	token: string,
 	webhook: Partial<EventWebhook>
 ): Promise<EventWebhook> => {
-	let error = null;
-
-	const res = await fetch(`${WEBUI_BASE_URL}/api/events/webhooks`, {
+	return apiRequest(`${WEBUI_BASE_URL}/api/events/webhooks`, {
 		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${token}`
-		},
-		body: JSON.stringify(webhook)
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			console.error(err);
-			error = err;
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+		token,
+		body: webhook,
+		getError: (err) => err
+	});
 };
 
 export const updateEventWebhook = async (
@@ -1694,58 +1537,20 @@ export const updateEventWebhook = async (
 	id: string,
 	webhook: Partial<EventWebhook>
 ): Promise<EventWebhook> => {
-	let error = null;
-
-	const res = await fetch(`${WEBUI_BASE_URL}/api/events/webhooks/${id}`, {
+	return apiRequest(`${WEBUI_BASE_URL}/api/events/webhooks/${id}`, {
 		method: 'PUT',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${token}`
-		},
-		body: JSON.stringify(webhook)
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			console.error(err);
-			error = err;
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+		token,
+		body: webhook,
+		getError: (err) => err
+	});
 };
 
 export const deleteEventWebhook = async (token: string, id: string) => {
-	let error = null;
-
-	const res = await fetch(`${WEBUI_BASE_URL}/api/events/webhooks/${id}`, {
+	return apiRequest(`${WEBUI_BASE_URL}/api/events/webhooks/${id}`, {
 		method: 'DELETE',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${token}`
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			console.error(err);
-			error = err;
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
+		token,
+		getError: (err) => err
+	});
 };
 
 export interface ModelConfig {
