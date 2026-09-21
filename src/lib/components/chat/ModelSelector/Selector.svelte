@@ -27,13 +27,12 @@
 		MODEL_DOWNLOAD_POOL,
 		mobile,
 		models,
-		temporaryChatEnabled,
 		settings,
 		config,
 		showSettings
 	} from '$lib/stores';
 	import { toast } from 'svelte-sonner';
-	import { capitalizeFirstLetter, sanitizeResponseContent, splitStream } from '$lib/utils';
+	import { splitStream } from '$lib/utils';
 	import { getModels } from '$lib/apis';
 
 	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';

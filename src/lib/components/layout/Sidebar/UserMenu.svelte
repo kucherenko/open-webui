@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { createEventDispatcher, getContext, onMount, tick } from 'svelte';
+	import { createEventDispatcher, getContext, tick } from 'svelte';
 
 	import { goto } from '$app/navigation';
-	import { fade, slide } from 'svelte/transition';
 
 	import { getUsage } from '$lib/apis';
 	import { getLogoutRedirectUrl, getSessionUser, userSignOut } from '$lib/apis/auths';

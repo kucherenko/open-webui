@@ -7,8 +7,6 @@
 	import { getBackendConfig } from '$lib/apis';
 	import {
 		getImageGenerationModels,
-		getImageGenerationConfig,
-		updateImageGenerationConfig,
 		getConfig,
 		updateConfig,
 		verifyConfigUrl

@@ -15,7 +15,7 @@
 
 	import { onMount, tick, getContext, createEventDispatcher } from 'svelte';
 
-	import { createPicker, getAuthToken } from '$lib/utils/google-drive-picker';
+	import { createPicker } from '$lib/utils/google-drive-picker';
 	import { pickAndDownloadFile } from '$lib/utils/onedrive-file-picker';
 	import { KokoroWorker } from '$lib/workers/KokoroWorker';
 
@@ -53,13 +53,12 @@
 	import { uploadFile } from '$lib/apis/files';
 	import { getCwd, uploadToTerminal } from '$lib/apis/terminal';
 	import { generateAutoCompletion } from '$lib/apis';
-	import { deleteFileById } from '$lib/apis/files';
 	import { getChatById } from '$lib/apis/chats';
 	import { getFolderById } from '$lib/apis/folders';
 	import { getNoteById } from '$lib/apis/notes';
 	import { replaceTextVariables } from '$lib/utils/textVariables';
 
-	import { WEBUI_BASE_URL, WEBUI_API_BASE_URL, PASTED_TEXT_CHARACTER_LIMIT } from '$lib/constants';
+	import { WEBUI_API_BASE_URL, PASTED_TEXT_CHARACTER_LIMIT } from '$lib/constants';
 	import { matchKeybinding, Shortcut } from '$lib/shortcuts';
 
 	import { createNoteHandler } from '../notes/utils';

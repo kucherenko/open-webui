@@ -1,20 +1,17 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
-	import { getContext, onMount } from 'svelte';
+	import { getContext } from 'svelte';
 	const i18n = getContext('i18n');
 
-	import { WEBUI_NAME, models, MODEL_DOWNLOAD_POOL, user, config, settings } from '$lib/stores';
+	import { models, MODEL_DOWNLOAD_POOL, config, settings } from '$lib/stores';
 	import { splitStream } from '$lib/utils';
 
 	import {
 		createModel,
 		deleteModel,
 		downloadModel,
-		getOllamaUrls,
-		getOllamaVersion,
 		pullModel,
 		uploadModel,
-		getOllamaConfig,
 		getOllamaModels
 	} from '$lib/apis/ollama';
 	import { getModels } from '$lib/apis';

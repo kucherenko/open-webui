@@ -1,5 +1,5 @@
 <script>
-	import { getContext, onMount, tick } from 'svelte';
+	import { getContext, tick } from 'svelte';
 	import { goto } from '$app/navigation';
 
 	const i18n = getContext('i18n');

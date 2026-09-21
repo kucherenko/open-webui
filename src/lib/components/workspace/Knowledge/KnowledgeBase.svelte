@@ -1,9 +1,8 @@
 <script lang="ts">
-	import Fuse from 'fuse.js';
 	import { toast } from 'svelte-sonner';
 	import { v4 as uuidv4 } from 'uuid';
 
-	import { onMount, getContext, onDestroy, tick } from 'svelte';
+	import { onMount, getContext, onDestroy } from 'svelte';
 	import type { Writable } from 'svelte/store';
 	import type { i18n as i18nType } from 'i18next';
 
@@ -11,19 +10,11 @@
 
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import {
-		mobile,
-		showSidebar,
-		knowledge as _knowledge,
-		config,
-		user,
-		settings
-	} from '$lib/stores';
+	import { config, user, settings } from '$lib/stores';
 
 	import {
 		updateFileDataContentById,
 		uploadFile,
-		deleteFileById,
 		getFileById,
 		renameFileById
 	} from '$lib/apis/files';
@@ -33,7 +24,6 @@
 		getPendingKnowledgeFiles,
 		removeFileFromKnowledgeById,
 		resetKnowledgeById,
-		updateFileFromKnowledgeById,
 		updateKnowledgeById,
 		updateKnowledgeAccessGrants,
 		searchKnowledgeFilesById,

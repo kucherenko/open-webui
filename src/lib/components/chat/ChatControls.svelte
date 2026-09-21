@@ -11,7 +11,6 @@
 		showCallOverlay,
 		showArtifacts,
 		showEmbeds,
-		settings,
 		showFileNavPath,
 		selectedTerminalId,
 		user

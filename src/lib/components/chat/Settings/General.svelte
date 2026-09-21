@@ -3,7 +3,7 @@
 	import { getLanguages, changeLanguage } from '$lib/i18n';
 	const dispatch = createEventDispatcher();
 
-	import { config, models, settings, theme, user } from '$lib/stores';
+	import { config, settings, theme, user } from '$lib/stores';
 
 	const i18n = getContext('i18n');
 

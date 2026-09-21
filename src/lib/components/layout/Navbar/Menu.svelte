@@ -5,16 +5,13 @@
 	import fileSaver from 'file-saver';
 	const { saveAs } = fileSaver;
 
-	import { downloadChatAsPDF } from '$lib/apis/utils';
 	import { copyToClipboard } from '$lib/utils';
 	import { getChatAsText, saveElementAsPdf, saveTextAsPdf } from '$lib/utils/chatExport';
 
 	import {
 		showControls,
 		showArtifacts,
-		mobile,
 		temporaryChatEnabled,
-		theme,
 		user,
 		settings,
 		folders,

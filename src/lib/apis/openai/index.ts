@@ -1,5 +1,5 @@
 import { apiRequest } from '$lib/apis/request';
-import { OPENAI_API_BASE_URL, WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
+import { OPENAI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
 
 export const getErrorMessage = (err: any, fallback = 'Server connection failed') => {
 	const detail = err?.detail;

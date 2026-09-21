@@ -1,11 +1,7 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import { toast } from 'svelte-sonner';
 
 	import { mobile, showSidebar, user } from '$lib/stores';
-
-	import { slide } from 'svelte/transition';
-	import { page } from '$app/stores';
 
 	import { WEBUI_API_BASE_URL } from '$lib/constants';
 

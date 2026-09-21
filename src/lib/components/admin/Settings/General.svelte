@@ -4,7 +4,7 @@
 
 	import { getBackendConfig, getVersionUpdates } from '$lib/apis';
 	import { getAdminConfig, updateAdminConfig } from '$lib/apis/auths';
-	import { getBanners, setBanners } from '$lib/apis/configs';
+	import { setBanners } from '$lib/apis/configs';
 	import InterfaceSettings from '$lib/components/common/InterfaceSettings.svelte';
 	import SettingsSelect from '$lib/components/common/SettingsSelect.svelte';
 	import Switch from '$lib/components/common/Switch.svelte';

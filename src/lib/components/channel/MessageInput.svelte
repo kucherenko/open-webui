@@ -6,7 +6,7 @@
 
 	const i18n = getContext('i18n');
 
-	import { config, mobile, settings, socket, user } from '$lib/stores';
+	import { config, mobile, settings, user } from '$lib/stores';
 	import {
 		convertHeicToJpeg,
 		compressImage,

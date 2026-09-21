@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, getContext } from 'svelte';
+	import { getContext } from 'svelte';
 	import Message from './Message.svelte';
 
 	const i18n = getContext('i18n');

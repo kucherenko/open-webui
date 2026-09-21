@@ -137,9 +137,9 @@
 	const eventDispatch = createEventDispatcher();
 
 	import { Fragment, DOMParser } from 'prosemirror-model';
-	import { EditorState, Plugin, PluginKey, TextSelection, Selection } from 'prosemirror-state';
+	import { Plugin, PluginKey, TextSelection, Selection } from 'prosemirror-state';
 	import { Decoration, DecorationSet } from 'prosemirror-view';
-	import { Editor, Extension, markInputRule, mergeAttributes } from '@tiptap/core';
+	import { Editor, Extension, markInputRule } from '@tiptap/core';
 
 	import { AIAutocompletion } from './RichTextInput/AutoCompletion.js';
 
@@ -159,7 +159,6 @@
 
 	import FileHandler from '@tiptap/extension-file-handler';
 	import Typography from '@tiptap/extension-typography';
-	import Highlight from '@tiptap/extension-highlight';
 	import Code from '@tiptap/extension-code';
 	import Italic from '@tiptap/extension-italic';
 	import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';

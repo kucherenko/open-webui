@@ -14,9 +14,8 @@
 		getChatPinnedStatusById,
 		toggleChatPinnedStatusById
 	} from '$lib/apis/chats';
-	import { chats, folders, settings, theme, user } from '$lib/stores';
+	import { chats, folders, settings, user } from '$lib/stores';
 	import { getChatAsText, saveElementAsPdf, saveTextAsPdf } from '$lib/utils/chatExport';
-	import { downloadChatAsPDF } from '$lib/apis/utils';
 	import ArchiveBoxIcon from '$lib/components/icons/ArchiveBox.svelte';
 	import CopyIcon from './icons/Copy.svelte';
 	import DownloadIcon from './icons/Download.svelte';

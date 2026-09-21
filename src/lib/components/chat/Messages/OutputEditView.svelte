@@ -1,7 +1,5 @@
 <script lang="ts">
 	import { getContext, onDestroy, tick } from 'svelte';
-	import { slide } from 'svelte/transition';
-	import { quintOut } from 'svelte/easing';
 
 	import { basicSetup, EditorView } from 'codemirror';
 	import { keymap } from '@codemirror/view';

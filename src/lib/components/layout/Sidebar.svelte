@@ -47,8 +47,6 @@
 		getChatById,
 		updateChatFolderIdById,
 		importChats,
-		deleteAllChats,
-		getChatListBySearchText,
 		markChatsRead
 	} from '$lib/apis/chats';
 	import {
@@ -57,7 +55,7 @@
 		getSharedFolders,
 		updateFolderParentIdById
 	} from '$lib/apis/folders';
-	import { createNewNote, getPinnedNoteList, toggleNotePinnedStatusById } from '$lib/apis/notes';
+	import { getPinnedNoteList } from '$lib/apis/notes';
 	import { updateUserSettings } from '$lib/apis/users';
 	import { createNoteHandler } from '$lib/components/notes/utils';
 	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';

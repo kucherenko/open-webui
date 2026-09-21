@@ -5,8 +5,6 @@
 	const i18n: Writable<any> = getContext('i18n');
 	const dispatch = createEventDispatcher();
 
-	import { goto } from '$app/navigation';
-	import { chatId, mobile, showSidebar } from '$lib/stores';
 	import { getSharedFolderChats } from '$lib/apis/folders';
 
 	import ChatItem from './ChatItem.svelte';

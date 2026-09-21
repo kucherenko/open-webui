@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
 	import { onMount, getContext, createEventDispatcher } from 'svelte';
 	const i18n = getContext('i18n');
 	const dispatch = createEventDispatcher();
@@ -13,7 +12,7 @@
 		showControls,
 		artifactContents
 	} from '$lib/stores';
-	import { copyToClipboard, createMessagesList } from '$lib/utils';
+	import { copyToClipboard } from '$lib/utils';
 	import { injectCsp } from '$lib/utils/csp';
 
 	import XMark from '../icons/XMark.svelte';

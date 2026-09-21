@@ -13,12 +13,10 @@
 	import PageEdit from '$lib/components/icons/PageEdit.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 
-	import { getKnowledgeBases } from '$lib/apis/knowledge';
 	import { uploadFile } from '$lib/apis/files';
 
 	import { toast } from 'svelte-sonner';
 	import { v4 as uuidv4 } from 'uuid';
-	import { WEBUI_API_BASE_URL } from '$lib/constants';
 
 	export let selectedItems = [];
 	const i18n = getContext('i18n');

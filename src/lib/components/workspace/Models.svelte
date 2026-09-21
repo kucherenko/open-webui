@@ -2,7 +2,6 @@
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
 	import { toast } from 'svelte-sonner';
-	import Sortable from 'sortablejs';
 
 	import fileSaver from 'file-saver';
 	const { saveAs } = fileSaver;
@@ -15,7 +14,6 @@
 	import {
 		WEBUI_NAME,
 		config,
-		mobile,
 		models as _models,
 		pinnedModels,
 		settings,

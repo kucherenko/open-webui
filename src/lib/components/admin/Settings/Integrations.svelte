@@ -1,15 +1,14 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
-	import { createEventDispatcher, onMount, getContext, tick } from 'svelte';
+	import { createEventDispatcher, onMount, getContext } from 'svelte';
 	import { v4 as uuidv4 } from 'uuid';
-	import { getModels as _getModels } from '$lib/apis';
 	import type { Writable } from 'svelte/store';
 	import type { i18n as i18nType } from 'i18next';
 
 	const dispatch = createEventDispatcher();
 	const i18n = getContext<Writable<i18nType>>('i18n');
 
-	import { models, settings, user, terminalServers } from '$lib/stores';
+	import { user, terminalServers } from '$lib/stores';
 	import { getTerminalServers } from '$lib/apis/terminal';
 	import { WEBUI_API_BASE_URL } from '$lib/constants';
 
