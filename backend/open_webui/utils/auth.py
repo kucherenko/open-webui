@@ -8,14 +8,11 @@ import logging
 import os
 import uuid
 from datetime import datetime, timedelta
-from typing import Optional, Union
+from typing import Union
 
 import bcrypt
 import jwt
-import pytz
 import requests
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from fastapi import BackgroundTasks, Depends, HTTPException, Request, Response, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -24,7 +21,6 @@ from open_webui.env import (
     ENABLE_OTEL,
     ENABLE_PASSWORD_VALIDATION,
     LICENSE_BLOB,
-    OFFLINE_MODE,
     PASSWORD_HASH_ALGORITHM,
     PASSWORD_VALIDATION_HINT,
     PASSWORD_VALIDATION_REGEX_PATTERN,

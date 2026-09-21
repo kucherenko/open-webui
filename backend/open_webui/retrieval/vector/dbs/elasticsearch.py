@@ -2,10 +2,9 @@
 NOTE: This vector database integration is community-supported and maintained on a best-effort basis.
 """
 
-import ssl
 from typing import Any, Optional
 
-from elasticsearch import BadRequestError, Elasticsearch
+from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk, scan
 from open_webui.config import (
     ELASTICSEARCH_API_KEY,

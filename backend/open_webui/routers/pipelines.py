@@ -8,7 +8,6 @@ import aiohttp
 from fastapi import (
     APIRouter,
     Depends,
-    FastAPI,
     File,
     Form,
     HTTPException,
@@ -17,14 +16,12 @@ from fastapi import (
     status,
 )
 from open_webui.config import CACHE_DIR
-from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import AIOHTTP_CLIENT_SESSION_SSL, AIOHTTP_FILE_STREAM_CHUNK_SIZE
 from open_webui.events import EVENTS, publish_event
 from open_webui.models.config import Config
 from open_webui.routers.openai import get_all_models_responses
 from open_webui.utils.auth import get_admin_user
 from pydantic import BaseModel
-from starlette.responses import FileResponse
 
 log = logging.getLogger(__name__)
 

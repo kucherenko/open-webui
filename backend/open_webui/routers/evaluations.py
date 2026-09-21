@@ -14,10 +14,8 @@ from open_webui.models.feedbacks import (
     FeedbackModel,
     Feedbacks,
     LeaderboardFeedbackData,
-    ModelHistoryEntry,
     ModelHistoryResponse,
 )
-from open_webui.models.users import UserModel, Users
 from open_webui.utils.auth import get_admin_user, get_verified_user
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession

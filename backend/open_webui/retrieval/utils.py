@@ -7,7 +7,6 @@ import os
 import re
 import time
 from typing import Awaitable, Optional, Union
-from urllib.parse import quote
 
 import aiohttp
 import requests
@@ -22,7 +21,6 @@ from open_webui.config import (
     RAG_EMBEDDING_CONTENT_PREFIX,
     RAG_EMBEDDING_PREFIX_FIELD_NAME,
     RAG_EMBEDDING_QUERY_PREFIX,
-    VECTOR_DB,
 )
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import (

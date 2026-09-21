@@ -6,7 +6,6 @@ from typing import Optional
 from open_webui.internal.db import Base, get_async_db_context
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import BigInteger, Column, Text, UniqueConstraint, and_, delete, or_, select
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 
 log = logging.getLogger(__name__)
@@ -687,7 +686,7 @@ class AccessGrantsTable:
         Returns a list of UserModel instances.
         """
         from open_webui.models.groups import Groups
-        from open_webui.models.users import UserModel, Users
+        from open_webui.models.users import Users
 
         async with get_async_db_context(db) as db:
             result = await db.execute(
@@ -782,7 +781,6 @@ class AccessGrantsTable:
 
         # LEFT JOIN access_grant and filter
         # We use a subquery approach to avoid duplicates from multiple matching grants
-        from sqlalchemy import exists as sa_exists
 
         grant_exists = (
             select(AccessGrant.id)
@@ -848,8 +846,6 @@ class AccessGrantsTable:
         """
         group_ids = filter.get('group_ids', [])
         user_id = filter.get('user_id')
-
-        from sqlalchemy import exists as sa_exists
 
         read_grant_exists = (
             select(AccessGrant.id)

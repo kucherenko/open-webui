@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Iterator, List, Union
+from typing import List
 from urllib.parse import quote
 
 import requests

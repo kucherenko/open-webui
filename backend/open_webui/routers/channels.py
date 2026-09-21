@@ -5,7 +5,6 @@ from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from fastapi.responses import FileResponse, Response, StreamingResponse
-from open_webui.config import ENABLE_ADMIN_CHAT_ACCESS, ENABLE_ADMIN_EXPORT
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.events import EVENTS, publish_event
 from open_webui.env import STATIC_DIR
@@ -30,7 +29,6 @@ from open_webui.models.messages import (
     MessageWithReactionsResponse,
 )
 from open_webui.models.users import (
-    UserIdNameResponse,
     UserIdNameStatusResponse,
     UserModel,
     UserNameResponse,
@@ -43,7 +41,7 @@ from open_webui.socket.main import (
     sio,
 )
 from open_webui.utils.access_control import filter_allowed_access_grants, has_permission
-from open_webui.utils.auth import get_admin_user, get_verified_user
+from open_webui.utils.auth import get_verified_user
 from open_webui.utils.channels import extract_mentions, replace_mentions
 from open_webui.utils.files import get_image_base64_from_file_id
 from open_webui.utils.models import (

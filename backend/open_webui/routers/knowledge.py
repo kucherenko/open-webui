@@ -6,7 +6,7 @@ import logging
 import time
 import uuid
 import zipfile
-from typing import List, Optional
+from typing import Optional
 from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -21,11 +21,10 @@ from open_webui.events import EVENTS, publish_event
 from open_webui.internal.db import get_async_session
 from open_webui.models.access_grants import AccessGrants
 from open_webui.models.config import Config
-from open_webui.models.files import FileMetadataResponse, FileModel, FileModelResponse, Files
+from open_webui.models.files import FileMetadataResponse, FileModel, Files
 from open_webui.models.groups import Groups
 from open_webui.models.knowledge import (
     KNOWLEDGE_SORTABLE_FIELDS,
-    KnowledgeDirectoryForm,
     KnowledgeDirectoryModel,
     KnowledgeFileListResponse,
     KnowledgeForm,
@@ -34,7 +33,7 @@ from open_webui.models.knowledge import (
     KnowledgeUserResponse,
 )
 from open_webui.models.models import ModelForm, Models
-from open_webui.retrieval.external import retrieve_external_knowledge, retrieve_external_knowledge_for_connection
+from open_webui.retrieval.external import retrieve_external_knowledge_for_connection
 from open_webui.retrieval.vector.async_client import ASYNC_VECTOR_DB_CLIENT
 from open_webui.routers.retrieval import (
     BatchProcessFilesForm,

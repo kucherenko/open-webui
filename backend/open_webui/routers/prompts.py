@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from open_webui.config import BYPASS_ADMIN_ACCESS_CONTROL
@@ -21,10 +20,9 @@ from open_webui.models.prompts import (
     PromptForm,
     PromptModel,
     Prompts,
-    PromptUserResponse,
 )
 from open_webui.utils.access_control import filter_allowed_access_grants, has_permission
-from open_webui.utils.auth import get_admin_user, get_verified_user
+from open_webui.utils.auth import get_verified_user
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 

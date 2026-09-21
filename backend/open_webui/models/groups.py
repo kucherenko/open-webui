@@ -4,8 +4,7 @@ import uuid
 from typing import Optional
 
 from open_webui.env import DEFAULT_GROUP_SHARE_PERMISSION
-from open_webui.internal.db import Base, JSONField, get_async_db_context
-from open_webui.models.files import FileMetadataResponse
+from open_webui.internal.db import Base, get_async_db_context
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import (
     JSON,
@@ -13,10 +12,8 @@ from sqlalchemy import (
     Column,
     ForeignKey,
     Index,
-    String,
     Text,
     and_,
-    cast,
     delete,
     func,
     or_,

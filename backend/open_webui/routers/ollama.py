@@ -7,7 +7,7 @@ import random
 import re
 import time
 from datetime import datetime
-from typing import Optional, Union
+from typing import Union
 from urllib.parse import urlparse
 
 import aiofiles
