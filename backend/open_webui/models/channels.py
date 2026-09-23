@@ -3,7 +3,7 @@ import time
 import uuid
 from typing import Optional
 
-from open_webui.internal.db import Base, JSONField, get_async_db_context
+from open_webui.internal.db import Base, get_async_db_context
 from open_webui.models.access_grants import (
     AccessGrantModel,
     AccessGrants,
@@ -18,7 +18,6 @@ from sqlalchemy import (
     Boolean,
     Column,
     ForeignKey,
-    String,
     Text,
     UniqueConstraint,
     and_,
@@ -27,9 +26,7 @@ from sqlalchemy import (
     func,
     or_,
     select,
-    update,
 )
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 
 ####################

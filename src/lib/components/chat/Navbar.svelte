@@ -1,9 +1,7 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import { toast } from 'svelte-sonner';
 
 	import {
-		WEBUI_NAME,
 		banners,
 		chatId,
 		config,
@@ -15,7 +13,6 @@
 		user
 	} from '$lib/stores';
 
-	import { slide } from 'svelte/transition';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 

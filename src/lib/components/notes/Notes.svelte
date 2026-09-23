@@ -23,19 +23,18 @@
 		}
 	}
 
-	import { onMount, getContext, onDestroy } from 'svelte';
+	import { onMount, getContext } from 'svelte';
 
 	const i18n = getContext('i18n');
 	// Assuming $i18n.languages is an array of language codes
 	$: loadLocale($i18n.languages);
 
 	import { goto } from '$app/navigation';
-	import { WEBUI_NAME, config, user, pinnedNotes, mobile, showSidebar } from '$lib/stores';
+	import { WEBUI_NAME, user, pinnedNotes, mobile, showSidebar } from '$lib/stores';
 	import {
 		createNewNote,
 		deleteNoteById,
 		getNoteById,
-		getNoteList,
 		searchNotes,
 		toggleNotePinnedStatusById,
 		getPinnedNoteList

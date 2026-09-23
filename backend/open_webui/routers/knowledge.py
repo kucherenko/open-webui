@@ -6,7 +6,7 @@ import logging
 import time
 import uuid
 import zipfile
-from typing import List, Optional
+from typing import Optional
 from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -21,11 +21,10 @@ from open_webui.events import EVENTS, publish_event
 from open_webui.internal.db import get_async_session
 from open_webui.models.access_grants import AccessGrants
 from open_webui.models.config import Config
-from open_webui.models.files import FileMetadataResponse, FileModel, FileModelResponse, Files
+from open_webui.models.files import FileMetadataResponse, FileModel, Files
 from open_webui.models.groups import Groups
 from open_webui.models.knowledge import (
     KNOWLEDGE_SORTABLE_FIELDS,
-    KnowledgeDirectoryForm,
     KnowledgeDirectoryModel,
     KnowledgeFileListResponse,
     KnowledgeForm,
@@ -34,7 +33,7 @@ from open_webui.models.knowledge import (
     KnowledgeUserResponse,
 )
 from open_webui.models.models import ModelForm, Models
-from open_webui.retrieval.external import retrieve_external_knowledge, retrieve_external_knowledge_for_connection
+from open_webui.retrieval.external import retrieve_external_knowledge_for_connection
 from open_webui.retrieval.vector.async_client import ASYNC_VECTOR_DB_CLIENT
 from open_webui.routers.retrieval import (
     BatchProcessFilesForm,
@@ -53,6 +52,36 @@ from sqlalchemy.ext.asyncio import AsyncSession
 log = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+async def get_knowledge_or_400(id: str, db: Optional[AsyncSession] = None):
+    knowledge = await Knowledges.get_knowledge_by_id(id=id, db=db)
+    if not knowledge:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+    return knowledge
+
+
+async def check_knowledge_access(knowledge, user, permission: str = 'read', db: Optional[AsyncSession] = None):
+    """Admins and the owner always pass; everyone else needs an access grant for `permission`."""
+    if not (
+        user.role == 'admin'
+        or knowledge.user_id == user.id
+        or await AccessGrants.has_access(
+            user_id=user.id,
+            resource_type='knowledge',
+            resource_id=knowledge.id,
+            permission=permission,
+            db=db,
+        )
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
+        )
+
 
 ############################
 # getKnowledgeBases
@@ -1218,21 +1247,7 @@ async def update_knowledge_access_by_id(
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        knowledge.user_id != user.id
-        and not await AccessGrants.has_access(
-            user_id=user.id,
-            resource_type='knowledge',
-            resource_id=knowledge.id,
-            permission='write',
-            db=db,
-        )
-        and user.role != 'admin'
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-        )
+    await check_knowledge_access(knowledge, user, permission='write', db=db)
 
     form_data.access_grants = await filter_allowed_access_grants(
         await Config.get('user.permissions'),
@@ -1344,28 +1359,9 @@ async def get_knowledge_files_by_id(
     user=Depends(get_verified_user),
     db: AsyncSession = Depends(get_async_session),
 ):
-    knowledge = await Knowledges.get_knowledge_by_id(id=id, db=db)
-    if not knowledge:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
+    knowledge = await get_knowledge_or_400(id, db=db)
 
-    if not (
-        user.role == 'admin'
-        or knowledge.user_id == user.id
-        or await AccessGrants.has_access(
-            user_id=user.id,
-            resource_type='knowledge',
-            resource_id=knowledge.id,
-            permission='read',
-            db=db,
-        )
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-        )
+    await check_knowledge_access(knowledge, user, db=db)
 
     page = max(page, 1)
 
@@ -1412,30 +1408,11 @@ async def add_file_to_knowledge_by_id(
     user=Depends(get_verified_user),
     db: AsyncSession = Depends(get_async_session),
 ):
-    knowledge = await Knowledges.get_knowledge_by_id(id=id, db=db)
-    if not knowledge:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
+    knowledge = await get_knowledge_or_400(id, db=db)
     if is_external_knowledge(knowledge):
         external_knowledge_error()
 
-    if (
-        knowledge.user_id != user.id
-        and not await AccessGrants.has_access(
-            user_id=user.id,
-            resource_type='knowledge',
-            resource_id=knowledge.id,
-            permission='write',
-            db=db,
-        )
-        and user.role != 'admin'
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-        )
+    await check_knowledge_access(knowledge, user, permission='write', db=db)
 
     file = await Files.get_file_by_id(form_data.file_id, db=db)
     if not file:
@@ -1509,30 +1486,11 @@ async def update_file_from_knowledge_by_id(
     user=Depends(get_verified_user),
     db: AsyncSession = Depends(get_async_session),
 ):
-    knowledge = await Knowledges.get_knowledge_by_id(id=id, db=db)
-    if not knowledge:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
+    knowledge = await get_knowledge_or_400(id, db=db)
     if is_external_knowledge(knowledge):
         external_knowledge_error()
 
-    if (
-        knowledge.user_id != user.id
-        and not await AccessGrants.has_access(
-            user_id=user.id,
-            resource_type='knowledge',
-            resource_id=knowledge.id,
-            permission='write',
-            db=db,
-        )
-        and user.role != 'admin'
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-        )
+    await check_knowledge_access(knowledge, user, permission='write', db=db)
 
     file = await Files.get_file_by_id(form_data.file_id, db=db)
     if not file:
@@ -1599,30 +1557,11 @@ async def remove_file_from_knowledge_by_id(
     user=Depends(get_verified_user),
     db: AsyncSession = Depends(get_async_session),
 ):
-    knowledge = await Knowledges.get_knowledge_by_id(id=id, db=db)
-    if not knowledge:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
+    knowledge = await get_knowledge_or_400(id, db=db)
     if is_external_knowledge(knowledge):
         external_knowledge_error()
 
-    if (
-        knowledge.user_id != user.id
-        and not await AccessGrants.has_access(
-            user_id=user.id,
-            resource_type='knowledge',
-            resource_id=knowledge.id,
-            permission='write',
-            db=db,
-        )
-        and user.role != 'admin'
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-        )
+    await check_knowledge_access(knowledge, user, permission='write', db=db)
 
     file = await Files.get_file_by_id(form_data.file_id, db=db)
     if not file:
@@ -1690,28 +1629,9 @@ async def delete_knowledge_by_id(
     user=Depends(get_verified_user),
     db: AsyncSession = Depends(get_async_session),
 ):
-    knowledge = await Knowledges.get_knowledge_by_id(id=id, db=db)
-    if not knowledge:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
+    knowledge = await get_knowledge_or_400(id, db=db)
 
-    if (
-        knowledge.user_id != user.id
-        and not await AccessGrants.has_access(
-            user_id=user.id,
-            resource_type='knowledge',
-            resource_id=knowledge.id,
-            permission='write',
-            db=db,
-        )
-        and user.role != 'admin'
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-        )
+    await check_knowledge_access(knowledge, user, permission='write', db=db)
 
     log.info('Deleting knowledge base: %s (name: %s)', id, knowledge.name)
 
@@ -1781,30 +1701,11 @@ async def reset_knowledge_by_id(
     user=Depends(get_verified_user),
     db: AsyncSession = Depends(get_async_session),
 ):
-    knowledge = await Knowledges.get_knowledge_by_id(id=id, db=db)
-    if not knowledge:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
+    knowledge = await get_knowledge_or_400(id, db=db)
     if is_external_knowledge(knowledge):
         external_knowledge_error()
 
-    if (
-        knowledge.user_id != user.id
-        and not await AccessGrants.has_access(
-            user_id=user.id,
-            resource_type='knowledge',
-            resource_id=knowledge.id,
-            permission='write',
-            db=db,
-        )
-        and user.role != 'admin'
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-        )
+    await check_knowledge_access(knowledge, user, permission='write', db=db)
 
     files = await Knowledges.get_files_by_id(id, db=db) if not ENABLE_KNOWLEDGE_FILE_RETENTION else []
 
@@ -2027,30 +1928,11 @@ async def add_files_to_knowledge_batch(
     """
     Add multiple files to a knowledge base
     """
-    knowledge = await Knowledges.get_knowledge_by_id(id=id, db=db)
-    if not knowledge:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
+    knowledge = await get_knowledge_or_400(id, db=db)
     if is_external_knowledge(knowledge):
         external_knowledge_error()
 
-    if (
-        knowledge.user_id != user.id
-        and not await AccessGrants.has_access(
-            user_id=user.id,
-            resource_type='knowledge',
-            resource_id=knowledge.id,
-            permission='write',
-            db=db,
-        )
-        and user.role != 'admin'
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-        )
+    await check_knowledge_access(knowledge, user, permission='write', db=db)
 
     # Batch-fetch all files to avoid N+1 queries
     log.info('files/batch/add - %s files', len(form_data))

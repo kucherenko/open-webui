@@ -5,7 +5,6 @@
 
 	import { exportChatStats, exportSingleChatStats, downloadChatStats } from '$lib/apis/chats';
 	import { getVersion } from '$lib/apis';
-	import { settings } from '$lib/stores';
 
 	import Modal from '$lib/components/common/Modal.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';

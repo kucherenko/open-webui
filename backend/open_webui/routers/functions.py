@@ -1,10 +1,7 @@
 from __future__ import annotations
 
 import logging
-import os
 import re
-from pathlib import Path
-from typing import Optional
 
 import aiohttp
 from fastapi import APIRouter, Depends, HTTPException, Request, status

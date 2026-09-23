@@ -4,7 +4,6 @@
 	const i18n = getContext('i18n');
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import { getFeedbackById } from '$lib/apis/evaluations';
-	import { toast } from 'svelte-sonner';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 
 	export let show = false;

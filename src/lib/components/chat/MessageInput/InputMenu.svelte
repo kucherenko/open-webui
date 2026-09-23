@@ -1,11 +1,8 @@
 <script lang="ts">
-	import { getContext, onMount, tick } from 'svelte';
+	import { getContext } from 'svelte';
 	import { fly } from 'svelte/transition';
 
-	import { config, user, tools as _tools, mobile, knowledge } from '$lib/stores';
-	import { getKnowledgeBases } from '$lib/apis/knowledge';
-
-	import { createPicker } from '$lib/utils/google-drive-picker';
+	import { config, user, mobile, knowledge } from '$lib/stores';
 
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
 	import DropdownMenu from '$lib/components/common/DropdownMenu.svelte';

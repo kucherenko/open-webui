@@ -11,7 +11,7 @@ import uuid
 from datetime import timedelta
 from functools import lru_cache
 from pathlib import Path
-from typing import Callable, Optional, Sequence, Union
+from typing import Sequence, Union
 
 import aiohttp
 import mimeparse

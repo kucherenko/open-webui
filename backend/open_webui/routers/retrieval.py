@@ -8,19 +8,14 @@ import os
 import re
 import shutil
 import uuid
-from datetime import datetime
-from pathlib import Path
 from types import SimpleNamespace
-from typing import Callable, Iterator, Optional, Sequence, Union
+from typing import Callable, Union
 from urllib.parse import unquote, urlparse
 
 import tiktoken
 from fastapi import (
     APIRouter,
     Depends,
-    FastAPI,
-    File,
-    Form,
     HTTPException,
     Query,
     Request,
@@ -28,7 +23,6 @@ from fastapi import (
     status,
 )
 from fastapi.concurrency import run_in_threadpool
-from fastapi.middleware.cors import CORSMiddleware
 from langchain_core.documents import Document
 from langchain_text_splitters import (
     MarkdownHeaderTextSplitter,
@@ -66,7 +60,7 @@ from open_webui.models.knowledge import Knowledges
 from open_webui.models.config import Config
 
 # Document loaders
-from open_webui.retrieval.loaders.youtube import YoutubeLoader, YoutubeTranscriptError
+from open_webui.retrieval.loaders.youtube import YoutubeTranscriptError
 from open_webui.retrieval.utils import (
     build_loader_from_config,
     get_loader_config,
@@ -122,7 +116,6 @@ from open_webui.retrieval.web.ydc import search_youcom
 from open_webui.retrieval.web.linkup import search_linkup
 from open_webui.storage.provider import Storage
 from open_webui.utils.access_control import has_permission
-from open_webui.utils.access_control.files import has_access_to_file
 from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.utils.misc import (
     calculate_sha256_string,

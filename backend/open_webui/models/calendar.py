@@ -18,7 +18,6 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     delete,
-    exists,
     func,
     or_,
     select,

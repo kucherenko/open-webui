@@ -6,7 +6,6 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 
-import grpc
 from open_webui.config import (
     QDRANT_API_KEY,
     QDRANT_COLLECTION_PREFIX,
@@ -25,7 +24,6 @@ from open_webui.retrieval.vector.main import (
 )
 from open_webui.retrieval.vector.utils import iter_filter_conditions
 from qdrant_client import QdrantClient as Qclient
-from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client.http.models import PointStruct
 from qdrant_client.models import models
 

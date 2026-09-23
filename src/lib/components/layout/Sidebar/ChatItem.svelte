@@ -17,7 +17,7 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
-	import { goto, invalidate, invalidateAll } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { onMount, getContext, createEventDispatcher, tick } from 'svelte';
 	import { LinkPreview } from 'bits-ui';
 	import {
@@ -26,7 +26,6 @@
 		deleteChatById,
 		getAllTags,
 		getChatById,
-		getChatListByTagName,
 		markChatUnreadById,
 		updateChatById,
 		updateChatFolderIdById

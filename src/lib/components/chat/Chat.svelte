@@ -2,14 +2,14 @@
 	import { v4 as uuidv4 } from 'uuid';
 	import { toast } from 'svelte-sonner';
 
-	import { getContext, onDestroy, onMount, tick } from 'svelte';
+	import { getContext, onMount, tick } from 'svelte';
 	import { fade } from 'svelte/transition';
 	const i18n: Writable<i18nType> = getContext('i18n');
 
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 
-	import { get, type Unsubscriber, type Writable } from 'svelte/store';
+	import { get, type Writable } from 'svelte/store';
 	import type { i18n as i18nType } from 'i18next';
 	import { WEBUI_BASE_URL } from '$lib/constants';
 	import equal from 'fast-deep-equal';
@@ -23,7 +23,6 @@
 		settings,
 		showSidebar,
 		WEBUI_NAME,
-		banners,
 		user,
 		socket,
 		audioQueue,
@@ -48,8 +47,6 @@
 		desktopEvent
 	} from '$lib/stores';
 	import { refreshChatList, refreshFolderChatLists } from '$lib/stores/chatList';
-
-	import { WEBUI_API_BASE_URL } from '$lib/constants';
 
 	import {
 		convertMessagesToHistory,
@@ -82,15 +79,9 @@
 		updateChatFolderIdById
 	} from '$lib/apis/chats';
 	import { generateOpenAIChatCompletion } from '$lib/apis/openai';
-	import { processUrl, processWebSearch } from '$lib/apis/retrieval';
+	import { processUrl } from '$lib/apis/retrieval';
+	import { getAndUpdateUserLocation, getUserInfoById, updateUserSettings } from '$lib/apis/users';
 	import {
-		getAndUpdateUserLocation,
-		getUserInfoById,
-		getUserSettings,
-		updateUserSettings
-	} from '$lib/apis/users';
-	import {
-		generateQueries,
 		chatAction,
 		generateMoACompletion,
 		stopTask,

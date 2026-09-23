@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
-	import { getContext, onMount } from 'svelte';
+	import { getContext } from 'svelte';
 	const i18n = getContext<any>('i18n');
 
 	import Modal from '$lib/components/common/Modal.svelte';
@@ -11,7 +11,6 @@
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 	import {
-		detectTerminalServerType,
 		verifyTerminalServerConnection,
 		putOrchestratorPolicy,
 		putOrchestratorLifecycle,

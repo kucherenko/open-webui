@@ -70,14 +70,12 @@
 		getUserTimezone,
 		removeAllDetails
 	} from '$lib/utils';
-	import { setTextScale } from '$lib/utils/text-scale';
 
 	import NotificationToast from '$lib/components/NotificationToast.svelte';
 	import AppSidebar from '$lib/components/app/AppSidebar.svelte';
 	import SyncStatsModal from '$lib/components/chat/Settings/SyncStatsModal.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import { getOutputText } from '$lib/components/chat/Messages/structuredOutput';
-	import { getUserSettings } from '$lib/apis/users';
 	import dayjs from 'dayjs';
 	import { getChannels } from '$lib/apis/channels';
 

@@ -2,7 +2,7 @@
 	import { toast } from 'svelte-sonner';
 	import { tick, getContext, onMount } from 'svelte';
 
-	import { models, settings } from '$lib/stores';
+	import { settings } from '$lib/stores';
 	import { user as _user } from '$lib/stores';
 	import {
 		copyToClipboard as _copyToClipboard,

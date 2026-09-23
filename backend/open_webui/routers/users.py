@@ -26,7 +26,6 @@ from open_webui.models.users import (
     UserInfoListResponse,
     UserInfoResponse,
     UserModel,
-    UserRoleUpdateForm,
     Users,
     UserSettings,
     UserStatus,

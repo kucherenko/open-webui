@@ -1,6 +1,5 @@
 import logging
 from typing import List, Optional, Tuple
-from urllib.parse import quote
 
 import requests
 from open_webui.env import ENABLE_FORWARD_USER_INFO_HEADERS, REQUESTS_VERIFY

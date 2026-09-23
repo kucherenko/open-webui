@@ -18,7 +18,7 @@
 	import GlobeAlt from '$lib/components/icons/GlobeAlt.svelte';
 	import LockClosed from '$lib/components/icons/LockClosed.svelte';
 
-	import { config, pinnedModels, settings } from '$lib/stores';
+	import { pinnedModels } from '$lib/stores';
 	import Link from '$lib/components/icons/Link.svelte';
 
 	const i18n = getContext('i18n');

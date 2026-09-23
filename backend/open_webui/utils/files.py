@@ -8,10 +8,6 @@ from typing import Optional
 
 import aiofiles
 from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    Request,
     UploadFile,
 )
 from open_webui.env import (
@@ -19,7 +15,6 @@ from open_webui.env import (
     AIOHTTP_CLIENT_SESSION_SSL,
     ENABLE_IMAGE_CONTENT_TYPE_EXTENSION_FALLBACK,
 )
-from open_webui.models.chats import Chats
 from open_webui.models.files import Files
 from open_webui.retrieval.web.utils import get_ssrf_safe_session, validate_url
 from open_webui.routers.files import upload_file_handler

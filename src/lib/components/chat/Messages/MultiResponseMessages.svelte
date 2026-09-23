@@ -4,10 +4,6 @@
 
 	import { mobile, models, settings } from '$lib/stores';
 
-	import { generateMoACompletion } from '$lib/apis';
-	import { updateChatById } from '$lib/apis/chats';
-	import { createOpenAITextStream } from '$lib/apis/streaming';
-
 	import ResponseMessage from './ResponseMessage.svelte';
 	import { getOutputText } from './structuredOutput';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
@@ -17,7 +13,6 @@
 	import Name from './Name.svelte';
 	import Skeleton from './Skeleton.svelte';
 	import ProfileImage from './ProfileImage.svelte';
-	import { WEBUI_BASE_URL } from '$lib/constants';
 	import equal from 'fast-deep-equal';
 	import { formatMessageTimestamp, formatMessageTimestampFull } from '$lib/utils';
 	const i18n = getContext('i18n');

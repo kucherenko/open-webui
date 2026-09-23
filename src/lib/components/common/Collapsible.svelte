@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { decode } from 'html-entities';
 	import { v4 as uuidv4 } from 'uuid';
 
 	import { getContext } from 'svelte';

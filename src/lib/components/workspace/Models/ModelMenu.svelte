@@ -15,7 +15,7 @@
 	import Pin from '$lib/components/icons/Pin.svelte';
 	import PinSlash from '$lib/components/icons/PinSlash.svelte';
 
-	import { config, user as currentUser, pinnedModels, settings } from '$lib/stores';
+	import { config, user as currentUser, pinnedModels } from '$lib/stores';
 	import Link from '$lib/components/icons/Link.svelte';
 
 	const i18n = getContext('i18n');

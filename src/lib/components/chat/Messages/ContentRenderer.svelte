@@ -1,5 +1,5 @@
 <script>
-	import { onDestroy, onMount, tick, getContext } from 'svelte';
+	import { onDestroy, tick, getContext } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import Markdown from './Markdown.svelte';
@@ -14,7 +14,7 @@
 		showEmbeds
 	} from '$lib/stores';
 	import FloatingButtons from '../ContentRenderer/FloatingButtons.svelte';
-	import { createMessagesList, replaceOutsideCode } from '$lib/utils';
+	import { replaceOutsideCode } from '$lib/utils';
 
 	/**
 	 * Extracts all top-level <details>...</details> blocks from content,

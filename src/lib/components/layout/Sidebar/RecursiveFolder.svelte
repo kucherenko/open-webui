@@ -4,7 +4,6 @@
 	const i18n = getContext('i18n');
 	const dispatch = createEventDispatcher();
 
-	import DOMPurify from 'dompurify';
 	import fileSaver from 'file-saver';
 	const { saveAs } = fileSaver;
 

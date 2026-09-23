@@ -9,7 +9,6 @@ import logging
 import mimetypes
 import os
 import uuid
-from fnmatch import fnmatch
 from pathlib import Path
 from typing import Optional
 
@@ -39,13 +38,11 @@ from open_webui.config import (
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import (
     AIOHTTP_CLIENT_SESSION_SSL,
-    AIOHTTP_CLIENT_TIMEOUT,
     AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST,
     AIOHTTP_FILE_STREAM_CHUNK_SIZE,
     BYPASS_PYDUB_PREPROCESSING,
     DEVICE_TYPE,
     ENABLE_FORWARD_USER_INFO_HEADERS,
-    ENV,
 )
 from open_webui.events import EVENTS, publish_event
 from open_webui.models.config import Config
@@ -59,7 +56,6 @@ from pydantic import BaseModel
 
 # pydub needs stdlib audioop (gone in 3.13); keep requires-python capped < 3.13
 from pydub import AudioSegment
-from pydub.silence import split_on_silence
 from pydub.utils import mediainfo
 
 log = logging.getLogger(__name__)

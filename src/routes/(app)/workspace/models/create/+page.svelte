@@ -4,8 +4,8 @@
 	import { config, models, settings } from '$lib/stores';
 	import { WEBUI_BASE_URL } from '$lib/constants';
 
-	import { onMount, tick, getContext } from 'svelte';
-	import { createNewModel, getModelById } from '$lib/apis/models';
+	import { onMount, getContext } from 'svelte';
+	import { createNewModel } from '$lib/apis/models';
 	import { getModels } from '$lib/apis';
 
 	import ModelEditor from '$lib/components/workspace/Models/ModelEditor.svelte';
