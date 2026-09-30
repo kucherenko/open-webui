@@ -31,7 +31,10 @@ ARG UID
 ARG GID
 
 # Set Node.js options (heap limit Allocation failed - JavaScript heap out of memory)
-# ENV NODE_OPTIONS="--max-old-space-size=4096"
+# `vite build` needs more than Node's default (~4 GB) heap on this codebase;
+# the Dokploy build host has 30 GB, so give the frontend build 8 GB.
+# NOTE (fork): upstream keeps this commented out — re-apply after every upstream merge.
+ENV NODE_OPTIONS="--max-old-space-size=8192"
 
 WORKDIR /app
 
