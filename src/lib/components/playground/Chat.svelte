@@ -7,8 +7,13 @@
 	import { goto } from '$app/navigation';
 	import { onMount, tick, getContext } from 'svelte';
 
-	import { WEBUI_BASE_URL } from '$lib/constants';
-	import { config, user, models, settings } from '$lib/stores';
+	import {
+		OLLAMA_API_BASE_URL,
+		OPENAI_API_BASE_URL,
+		WEBUI_API_BASE_URL,
+		WEBUI_BASE_URL
+	} from '$lib/constants';
+	import { WEBUI_NAME, config, user, models, settings } from '$lib/stores';
 
 	import { chatCompletion } from '$lib/apis/openai';
 
@@ -32,7 +37,7 @@
 	import Download from '../icons/Download.svelte';
 	import EllipsisHorizontal from '../icons/EllipsisHorizontal.svelte';
 
-	const i18n = getContext('i18n');
+	const i18n: any = getContext('i18n');
 
 	let loaded = false;
 
@@ -256,7 +261,7 @@
 
 		const exportData = {
 			chat: {
-				title: 'Playground Chat',
+				title: $i18n.t('Playground Chat'),
 				models: [selectedModelId],
 				params: system ? { system } : {},
 				history: {

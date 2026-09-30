@@ -1,7 +1,14 @@
 import logging
+import mimetypes
+import os
+import shutil
+import uuid
+from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
+from fastapi.responses import FileResponse, StreamingResponse
+from open_webui.config import UPLOAD_DIR
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.events import EVENTS, publish_event
 from open_webui.internal.db import get_async_session
@@ -10,6 +17,7 @@ from open_webui.models.config import Config
 from open_webui.models.chats import Chats
 from open_webui.models.folders import (
     FolderForm,
+    FolderModel,
     FolderNameIdResponse,
     Folders,
     FolderUpdateForm,
@@ -23,7 +31,7 @@ from open_webui.utils.access_control import (
     filter_allowed_access_grants,
 )
 from open_webui.utils.access_control.files import can_read_all_folder_files, get_accessible_folder_files
-from open_webui.utils.auth import get_verified_user
+from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.tasks import has_active_tasks
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -279,7 +287,12 @@ async def get_shared_folders(
 ############################
 
 
-@router.get('/{id}', response_model=None)
+class FolderResponse(FolderModel):
+    access_grants: list[dict] = []
+    write_access: bool = False
+
+
+@router.get('/{id}', response_model=FolderResponse)
 async def get_folder_by_id(
     request: Request, id: str, user=Depends(get_verified_user), db: AsyncSession = Depends(get_async_session)
 ):
@@ -287,13 +300,21 @@ async def get_folder_by_id(
     folder = await Folders.get_folder_by_id_and_user_id(id, user.id, db=db)
     if folder:
         grants = await AccessGrants.get_grants_by_resource('folder', id, db=db)
-        return {**folder.model_dump(), 'access_grants': [g.model_dump() for g in grants]}
+        return FolderResponse(
+            **folder.model_dump(),
+            access_grants=[g.model_dump() for g in grants],
+            write_access=True,
+        )
 
     # Check shared access
     folder = await Folders.get_folder_by_id(id, db=db)
     if folder and (user.role == 'admin' or await _has_folder_access(user.id, folder, 'read', db)):
         grants = await AccessGrants.get_grants_by_resource('folder', id, db=db)
-        return {**folder.model_dump(), 'access_grants': [g.model_dump() for g in grants]}
+        return FolderResponse(
+            **folder.model_dump(),
+            access_grants=[g.model_dump() for g in grants],
+            write_access=user.role == 'admin' or await _has_folder_access(user.id, folder, 'write', db),
+        )
 
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
@@ -393,7 +414,7 @@ async def update_folder_parent_id_by_id(
             form_data.parent_id, user.id, folder.name, db=db
         )
 
-        if existing_folder:
+        if existing_folder and existing_folder.id != id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=ERROR_MESSAGES.DEFAULT('Folder already exists'),
@@ -675,7 +696,7 @@ async def delete_folder_by_id(
     folder_owner_id = folder.user_id
 
     folder_ids = await Folders.get_folder_ids_by_id_and_user_id_in_subtree(id, folder_owner_id, db=db)
-    if await Chats.count_chats_by_folder_ids_and_user_id(folder_ids, folder_owner_id, db=db):
+    if delete_contents and await Chats.count_chats_by_folder_ids_and_user_id(folder_ids, folder_owner_id, db=db):
         chat_delete_permission = await has_permission(
             user.id, 'chat.delete', await Config.get('user.permissions'), db=db
         )
@@ -696,8 +717,8 @@ async def delete_folder_by_id(
                 for folder_id in folder_ids:
                     if delete_contents:
                         await Chats.delete_chats_by_user_id_and_folder_id(folder_owner_id, folder_id, db=db)
-                    else:
-                        await Chats.move_chats_by_user_id_and_folder_id(folder_owner_id, folder_id, None, db=db)
+
+                    await Chats.move_chats_by_folder_id(folder_id, None, db=db)
 
                     # Clean up access grants for this folder
                     await AccessGrants.revoke_all_access('folder', folder_id, db=db)

@@ -10,12 +10,15 @@ from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     Column,
     Integer,
+    LargeBinary,
     MetaData,
     Table,
     Text,
     cast,
     column,
     create_engine,
+    func,
+    literal,
     select,
     text,
     values,
@@ -308,6 +311,7 @@ class OpenGaussClient(VectorDBBase):
             results = query.all()
 
             if not results:
+                self.session.rollback()
                 return None
 
             ids = [[result.id for result in results]]
@@ -330,6 +334,7 @@ class OpenGaussClient(VectorDBBase):
             results = query.all()
 
             if not results:
+                self.session.rollback()
                 return None
 
             ids = [[result.id for result in results]]

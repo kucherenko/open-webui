@@ -1,8 +1,9 @@
 <script lang="ts">
+	import Fuse from 'fuse.js';
 	import { toast } from 'svelte-sonner';
 	import { v4 as uuidv4 } from 'uuid';
 
-	import { onMount, getContext, onDestroy } from 'svelte';
+	import { onMount, getContext, onDestroy, tick } from 'svelte';
 	import type { Writable } from 'svelte/store';
 	import type { i18n as i18nType } from 'i18next';
 
@@ -10,11 +11,19 @@
 
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { config, user, settings } from '$lib/stores';
+	import {
+		mobile,
+		showSidebar,
+		knowledge as _knowledge,
+		config,
+		user,
+		settings
+	} from '$lib/stores';
 
 	import {
 		updateFileDataContentById,
 		uploadFile,
+		deleteFileById,
 		getFileById,
 		renameFileById
 	} from '$lib/apis/files';
@@ -24,6 +33,7 @@
 		getPendingKnowledgeFiles,
 		removeFileFromKnowledgeById,
 		resetKnowledgeById,
+		updateFileFromKnowledgeById,
 		updateKnowledgeById,
 		updateKnowledgeAccessGrants,
 		searchKnowledgeFilesById,
@@ -318,10 +328,7 @@
 		for (const fileItem of newFileItems) {
 			try {
 				console.log(fileItem);
-				const res = await processUrl(localStorage.token, fileItem.url).catch((e) => {
-					console.error('Error processing URL:', e);
-					return null;
-				});
+				const res = await processUrl(localStorage.token, fileItem.url);
 
 				if (res) {
 					console.log(res);
@@ -341,9 +348,6 @@
 							knowledge_id: knowledge.id,
 							directory_id: currentDirectoryId,
 							source_url: fileItem.url
-						}).catch((e) => {
-							toast.error(`${e}`);
-							return null;
 						});
 					} else if (uploadedFile?.id) {
 						const linkedKnowledge = await addFileToKnowledgeById(
@@ -490,7 +494,7 @@
 		if (error.name === 'AbortError') {
 			toast.info($i18n.t('Directory selection was cancelled'));
 		} else {
-			toast.error($i18n.t('Error accessing directory'));
+			toast.error(`${$i18n.t('Error accessing directory')}: ${error.message}`);
 			console.error('Directory access error:', error);
 		}
 	};
@@ -511,7 +515,12 @@
 						if (hasHiddenFolder(entryPath)) continue;
 
 						if (entry.kind === 'file') {
-							const file = await entry.getFile();
+							let file: File;
+							try {
+								file = await entry.getFile();
+							} catch (error) {
+								throw new Error(`"${entryPath}": ${error}`);
+							}
 							collected.push({ path: dirPath, filename: entry.name, file });
 						} else if (entry.kind === 'directory') {
 							await traverse(entry, entryPath);
@@ -1011,9 +1020,14 @@
 		}
 
 		if (entry.isFile) {
-			const file = await new Promise<File>((resolve, reject) => {
-				entry.file(resolve, reject);
-			});
+			let file: File;
+			try {
+				file = await new Promise<File>((resolve, reject) => {
+					entry.file(resolve, reject);
+				});
+			} catch (error) {
+				throw new Error(`"${entryPath}": ${error}`);
+			}
 			const parts = entryPath.split('/');
 			const filename = parts.pop() || file.name;
 			return [{ path: parts.join('/'), filename, file }];
@@ -1209,6 +1223,8 @@
 			share={$user?.permissions?.sharing?.knowledge || $user?.role === 'admin'}
 			sharePublic={$user?.permissions?.sharing?.public_knowledge || $user?.role === 'admin'}
 			shareUsers={($user?.permissions?.access_grants?.allow_users ?? true) ||
+				$user?.role === 'admin'}
+			allowGroups={($user?.permissions?.access_grants?.allow_groups ?? true) ||
 				$user?.role === 'admin'}
 			onChange={async () => {
 				try {
@@ -1419,13 +1435,7 @@
 											currentPage = 1;
 										}}
 									>
-										<Checkbox
-											state={includeContent ? 'checked' : 'unchecked'}
-											on:change={(e) => {
-												includeContent = e.detail === 'checked';
-												currentPage = 1;
-											}}
-										/>
+										<Checkbox state={includeContent ? 'checked' : 'unchecked'} />
 										{$i18n.t('File content')}
 									</button>
 								</DropdownMenu>

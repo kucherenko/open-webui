@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { getContext } from 'svelte';
+	import { getContext, createEventDispatcher, onMount } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import { toast } from 'svelte-sonner';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 
-	import { deleteChannelById } from '$lib/apis/channels';
+	import { createNewChannel, deleteChannelById } from '$lib/apis/channels';
 	import { user } from '$lib/stores';
 
 	import Spinner from '$lib/components/common/Spinner.svelte';

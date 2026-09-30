@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import logging
+import os
 import re
+from pathlib import Path
+from typing import Optional
 
 import aiohttp
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -20,6 +23,7 @@ from open_webui.models.functions import (
 )
 from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.utils.plugin import (
+    get_function_contents_cache,
     get_functions_cache,
     get_function_module_from_cache,
     load_function_module_by_id,
@@ -437,6 +441,8 @@ async def delete_function_by_id(
     if result:
         FUNCTIONS = get_functions_cache(request)
         FUNCTIONS.pop(id, None)
+        FUNCTION_CONTENTS = get_function_contents_cache(request)
+        FUNCTION_CONTENTS.pop(id, None)
         await publish_event(
             request,
             EVENTS.FUNCTION_DELETED,

@@ -1,5 +1,5 @@
 <script>
-	import { onDestroy, tick, getContext } from 'svelte';
+	import { onDestroy, onMount, tick, getContext } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import Markdown from './Markdown.svelte';
@@ -14,7 +14,7 @@
 		showEmbeds
 	} from '$lib/stores';
 	import FloatingButtons from '../ContentRenderer/FloatingButtons.svelte';
-	import { replaceOutsideCode } from '$lib/utils';
+	import { createMessagesList, replaceOutsideCode } from '$lib/utils';
 
 	/**
 	 * Extracts all top-level <details>...</details> blocks from content,
@@ -89,6 +89,7 @@
 
 	export let editCodeBlock = true;
 	export let topPadding = false;
+	export let allowEmbeds = false;
 
 	export let onSave = (e) => {};
 	export let onSourceClick = (e) => {};
@@ -293,6 +294,7 @@
 			{preview}
 			{compactPreview}
 			{done}
+			{allowEmbeds}
 			{editCodeBlock}
 			{topPadding}
 			{sourceIds}
@@ -317,6 +319,7 @@
 				{preview}
 				{compactPreview}
 				{done}
+				{allowEmbeds}
 				{editCodeBlock}
 				{topPadding}
 				{sourceIds}
@@ -343,6 +346,7 @@
 					{preview}
 					{compactPreview}
 					{done}
+					{allowEmbeds}
 					{onToolCallResolved}
 				/>
 			</div>

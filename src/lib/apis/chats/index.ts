@@ -1,4 +1,3 @@
-import { apiRequest } from '$lib/apis/request';
 import { WEBUI_API_BASE_URL } from '$lib/constants';
 import { getTimeRange } from '$lib/utils';
 
@@ -11,16 +10,60 @@ const getErrorDetail = (err: any) => {
 };
 
 export const getChatConfig = async (token: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/config`, { token, getError: getErrorDetail });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/config`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const updateChatConfig = async (token: string, config: object) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/config`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/config`, {
 		method: 'POST',
-		token,
-		body: config,
-		getError: getErrorDetail
-	});
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		},
+		body: JSON.stringify(config)
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const createNewChat = async (
@@ -29,35 +72,131 @@ export const createNewChat = async (
 	folderId: string | null,
 	variables: object | null = null
 ) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/new`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/new`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
 			chat: chat,
 			...(variables !== null ? { variables } : {}),
 			folder_id: folderId ?? null
-		},
-		getError: getErrorDetail
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const unarchiveAllChats = async (token: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/unarchive/all`, { method: 'POST', token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/unarchive/all`, {
+		method: 'POST',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = err.detail;
+
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const unshareAllChats = async (token: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/share/all`, { method: 'DELETE', token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/share/all`, {
+		method: 'DELETE',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = err.detail;
+
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const importChats = async (token: string, chats: object[]) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/import`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/import`, {
 		method: 'POST',
-		token,
-		body: {
-			chats
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
 		},
-		getError: getErrorDetail
-	});
+		body: JSON.stringify({
+			chats
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getChatList = async (
@@ -66,6 +205,7 @@ export const getChatList = async (
 	include_pinned: boolean = false,
 	include_folders: boolean = false
 ) => {
+	let error = null;
 	const searchParams = new URLSearchParams();
 
 	if (page !== null) {
@@ -80,10 +220,30 @@ export const getChatList = async (
 		searchParams.append('include_pinned', 'true');
 	}
 
-	const res = await apiRequest(`${WEBUI_API_BASE_URL}/chats/?${searchParams.toString()}`, {
-		token,
-		getError: getErrorDetail
-	});
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/?${searchParams.toString()}`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
 
 	if (!res) {
 		return [];
@@ -101,6 +261,8 @@ export const getChatListByUserId = async (
 	page: number = 1,
 	filter?: object
 ) => {
+	let error = null;
+
 	const searchParams = new URLSearchParams();
 
 	searchParams.append('page', `${page}`);
@@ -113,10 +275,33 @@ export const getChatListByUserId = async (
 		});
 	}
 
-	const res = await apiRequest(
+	const res = await fetch(
 		`${WEBUI_API_BASE_URL}/chats/list/user/${userId}?${searchParams.toString()}`,
-		{ token, getError: getErrorDetail }
-	);
+		{
+			method: 'GET',
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/json',
+				...(token && { authorization: `Bearer ${token}` })
+			}
+		}
+	)
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
 
 	return res.map((chat) => ({
 		...chat,
@@ -129,6 +314,8 @@ export const getArchivedChatList = async (
 	page: number = 1,
 	filter?: object
 ) => {
+	let error = null;
+
 	const searchParams = new URLSearchParams();
 	searchParams.append('page', `${page}`);
 
@@ -140,10 +327,30 @@ export const getArchivedChatList = async (
 		});
 	}
 
-	const res = await apiRequest(`${WEBUI_API_BASE_URL}/chats/archived?${searchParams.toString()}`, {
-		token,
-		getError: getErrorDetail
-	});
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/archived?${searchParams.toString()}`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
 
 	return res.map((chat) => ({
 		...chat,
@@ -152,13 +359,36 @@ export const getArchivedChatList = async (
 };
 
 export const getArchivedChatCount = async (token: string = '') => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/archived/count`, {
-		token,
-		getError: getErrorDetail
-	});
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/archived/count`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getSharedChatList = async (token: string = '', page: number = 1, filter?: object) => {
+	let error = null;
+
 	const searchParams = new URLSearchParams();
 	searchParams.append('page', `${page}`);
 
@@ -170,10 +400,30 @@ export const getSharedChatList = async (token: string = '', page: number = 1, fi
 		});
 	}
 
-	const res = await apiRequest(`${WEBUI_API_BASE_URL}/chats/shared?${searchParams.toString()}`, {
-		token,
-		getError: getErrorDetail
-	});
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/shared?${searchParams.toString()}`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
 
 	return res.map((chat) => ({
 		...chat,
@@ -232,14 +482,36 @@ export const getAllChats = async (token: string) => {
 };
 
 export const getChatListBySearchText = async (token: string, text: string, page: number = 1) => {
+	let error = null;
+
 	const searchParams = new URLSearchParams();
 	searchParams.append('text', text);
 	searchParams.append('page', `${page}`);
 
-	const res = await apiRequest(`${WEBUI_API_BASE_URL}/chats/search?${searchParams.toString()}`, {
-		token,
-		getError: getErrorDetail
-	});
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/search?${searchParams.toString()}`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
 
 	return res.map((chat) => ({
 		...chat,
@@ -248,44 +520,195 @@ export const getChatListBySearchText = async (token: string, text: string, page:
 };
 
 export const getChatsByFolderId = async (token: string, folderId: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/folder/${folderId}`, {
-		token,
-		getError: getErrorDetail
-	});
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/folder/${folderId}`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getChatListByFolderId = async (token: string, folderId: string, page: number = 1) => {
+	let error = null;
+
 	const searchParams = new URLSearchParams();
 	if (page !== null) {
 		searchParams.append('page', `${page}`);
 	}
 
-	return apiRequest(
+	const res = await fetch(
 		`${WEBUI_API_BASE_URL}/chats/folder/${folderId}/list?${searchParams.toString()}`,
-		{ token, getError: getErrorDetail }
-	);
+		{
+			method: 'GET',
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/json',
+				...(token && { authorization: `Bearer ${token}` })
+			}
+		}
+	)
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getAllArchivedChats = async (token: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/all/archived`, {
-		token,
-		getError: getErrorDetail
-	});
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/all/archived`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getAllUserChats = async (token: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/all/db`, { token, getError: getErrorDetail });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/all/db`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getAllTags = async (token: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/all/tags`, { token, getError: getErrorDetail });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/all/tags`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getPinnedChatList = async (token: string = '') => {
-	const res = await apiRequest(`${WEBUI_API_BASE_URL}/chats/pinned`, {
-		token,
-		getError: getErrorDetail
-	});
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/pinned`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
 
 	return res.map((chat) => ({
 		...chat,
@@ -294,14 +717,35 @@ export const getPinnedChatList = async (token: string = '') => {
 };
 
 export const getChatListByTagName = async (token: string = '', tagName: string) => {
-	const res = await apiRequest(`${WEBUI_API_BASE_URL}/chats/tags`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/tags`, {
 		method: 'POST',
-		token,
-		body: {
-			name: tagName
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
 		},
-		getError: getErrorDetail
-	});
+		body: JSON.stringify({
+			name: tagName
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
 
 	return res.map((chat) => ({
 		...chat,
@@ -310,14 +754,67 @@ export const getChatListByTagName = async (token: string = '', tagName: string) 
 };
 
 export const getChatById = async (token: string, id: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/${id}`, { token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/${id}`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = err.detail;
+
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getChatByShareId = async (token: string, share_id: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/share/${share_id}`, {
-		token,
-		getError: getErrorDetail
-	});
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/share/${share_id}`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getChatPinnedStatusById = async (token: string, id: string) => {
@@ -397,19 +894,59 @@ export const toggleChatPinnedStatusById = async (token: string, id: string) => {
 };
 
 export const markChatUnreadById = async (token: string, id: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/${id}/unread`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/${id}/unread`, {
 		method: 'POST',
-		token,
-		getError: (err) => ('detail' in err ? err.detail : err)
-	});
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = 'detail' in err ? err.detail : err;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const markChatsRead = async (token: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/read`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/read`, {
 		method: 'POST',
-		token,
-		getError: (err) => ('detail' in err ? err.detail : err)
-	});
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = 'detail' in err ? err.detail : err;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const cloneChatById = async (token: string, id: string, title?: string) => {
@@ -533,56 +1070,201 @@ export const cloneSharedChatById = async (token: string, id: string) => {
 };
 
 export const shareChatById = async (token: string, id: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/${id}/share`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/${id}/share`, {
 		method: 'POST',
-		token,
-		getError: getErrorDetail
-	});
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const updateChatFolderIdById = async (token: string, id: string, folderId?: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/${id}/folder`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/${id}/folder`, {
 		method: 'POST',
-		token,
-		body: {
-			folder_id: folderId
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
 		},
-		getError: getErrorDetail
-	});
+		body: JSON.stringify({
+			folder_id: folderId
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const archiveChatById = async (token: string, id: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/${id}/archive`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/${id}/archive`, {
 		method: 'POST',
-		token,
-		getError: getErrorDetail
-	});
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const deleteSharedChatById = async (token: string, id: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/${id}/share`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/${id}/share`, {
 		method: 'DELETE',
-		token,
-		getError: getErrorDetail
-	});
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const updateChatAccessGrants = async (token: string, id: string, accessGrants: object[]) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/shared/${id}/access/update`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/shared/${id}/access/update`, {
 		method: 'POST',
-		token,
-		body: {
-			access_grants: accessGrants
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
 		},
-		getError: getErrorDetail
-	});
+		body: JSON.stringify({
+			access_grants: accessGrants
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getChatAccessGrants = async (token: string, id: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/shared/${id}/access`, {
-		token,
-		getError: getErrorDetail
-	});
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/shared/${id}/access`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const updateChatById = async (
@@ -591,32 +1273,100 @@ export const updateChatById = async (
 	chat: object,
 	variables: object | null = null
 ) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/${id}`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/${id}`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		},
+		body: JSON.stringify({
 			chat: chat,
 			...(variables !== null ? { variables } : {})
-		},
-		getError: getErrorDetail
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const compactChatById = async (token: string, id: string, model?: string | null) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/${id}/compact`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/${id}/compact`, {
 		method: 'POST',
-		token,
-		body: { model },
-		getError: getErrorDetail
-	});
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		},
+		body: JSON.stringify({ model })
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const deleteChatMessageById = async (token: string, id: string, messageId: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/${id}/messages/${messageId}`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/${id}/messages/${messageId}`, {
 		method: 'DELETE',
-		token,
-		getError: getErrorDetail
-	});
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const resolveChatMessageToolCall = async (
@@ -627,55 +1377,237 @@ export const resolveChatMessageToolCall = async (
 	action: 'approve' | 'reject' | 'answer',
 	options: { answers?: unknown; timed_out?: boolean } = {}
 ) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/${id}/messages/${messageId}/resolve`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/${id}/messages/${messageId}/resolve`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		},
+		body: JSON.stringify({
 			call_id: callId,
 			action,
 			...options
-		},
-		getError: getErrorDetail
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const deleteChatById = async (token: string, id: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/${id}`, { method: 'DELETE', token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/${id}`, {
+		method: 'DELETE',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = err.detail;
+
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getTagsById = async (token: string, id: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/${id}/tags`, { token, getError: getErrorDetail });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/${id}/tags`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const addTagById = async (token: string, id: string, tagName: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/${id}/tags`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/${id}/tags`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		},
+		body: JSON.stringify({
 			name: tagName
-		}
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const deleteTagById = async (token: string, id: string, tagName: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/${id}/tags`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/${id}/tags`, {
 		method: 'DELETE',
-		token,
-		body: {
-			name: tagName
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
 		},
-		getError: getErrorDetail
-	});
+		body: JSON.stringify({
+			name: tagName
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const deleteAllChats = async (token: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/`, { method: 'DELETE', token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/`, {
+		method: 'DELETE',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = err.detail;
+
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const archiveAllChats = async (token: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/archive/all`, { method: 'POST', token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/archive/all`, {
+		method: 'POST',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = err.detail;
+
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 export const exportChatStats = async (token: string, page: number = 1, params: object = {}) => {
+	let error = null;
+
 	const searchParams = new URLSearchParams();
 	searchParams.append('page', `${page}`);
 
@@ -685,17 +1617,66 @@ export const exportChatStats = async (token: string, page: number = 1, params: o
 		}
 	}
 
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/stats/export?${searchParams.toString()}`, {
-		token,
-		getError: getErrorDetail
-	});
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/stats/export?${searchParams.toString()}`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const exportSingleChatStats = async (token: string, chatId: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/chats/stats/export/${chatId}`, {
-		token,
-		getError: getErrorDetail
-	});
+	let error = null;
+
+	const res = await fetch(
+		`${WEBUI_API_BASE_URL}/chats/stats/export/${encodeURIComponent(chatId)}`,
+		{
+			method: 'GET',
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/json',
+				...(token && { authorization: `Bearer ${token}` })
+			}
+		}
+	)
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = getErrorDetail(err);
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const downloadChatStats = async (

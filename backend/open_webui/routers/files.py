@@ -27,6 +27,7 @@ from open_webui.events import EVENTS, publish_event
 from open_webui.internal.db import get_async_db_context, get_async_session
 from open_webui.models.access_grants import AccessGrants
 from open_webui.models.channels import Channels
+from open_webui.models.chats import Chats
 from open_webui.models.config import Config
 from open_webui.models.files import (
     FileForm,
@@ -35,6 +36,7 @@ from open_webui.models.files import (
     FileModelResponse,
     Files,
 )
+from open_webui.models.groups import Groups
 from open_webui.models.knowledge import Knowledges
 from open_webui.models.users import Users
 from open_webui.retrieval.vector.async_client import ASYNC_VECTOR_DB_CLIENT
@@ -222,6 +224,15 @@ async def process_uploaded_file(
                             f'{knowledge_id}: user {user.id} lacks write access'
                         )
                     else:
+                        directory_id = file_metadata.get('directory_id') or None
+                        if directory_id:
+                            directory = await Knowledges.get_directory_by_id(directory_id, db=db_session)
+                            if not directory or directory.knowledge_id != knowledge_id:
+                                log.warning(
+                                    'Ignoring directory %s: not a directory of knowledge %s', directory_id, knowledge_id
+                                )
+                                directory_id = None
+
                         # Keep the generic file status stream open until the
                         # KB-specific vector write and durable link both finish.
                         await Files.update_file_data_by_id(file_item.id, {'status': 'processing'}, db=db_session)
@@ -235,7 +246,7 @@ async def process_uploaded_file(
                             knowledge_id=knowledge_id,
                             file_id=file_item.id,
                             user_id=user.id,
-                            directory_id=file_metadata.get('directory_id'),
+                            directory_id=directory_id,
                             db=db_session,
                         )
                         if not knowledge_file:
@@ -459,7 +470,11 @@ async def upload_file_handler(
         log.exception(e)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.DEFAULT('Error uploading file'),
+            detail=(
+                ERROR_MESSAGES.EMPTY_CONTENT
+                if isinstance(e, ValueError) and e.args == (ERROR_MESSAGES.EMPTY_CONTENT,)
+                else ERROR_MESSAGES.DEFAULT('Error uploading file')
+            ),
         )
 
 

@@ -6,6 +6,7 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 
+import grpc
 from open_webui.config import (
     QDRANT_API_KEY,
     QDRANT_COLLECTION_PREFIX,
@@ -22,8 +23,9 @@ from open_webui.retrieval.vector.main import (
     VectorDBBase,
     VectorItem,
 )
-from open_webui.retrieval.vector.utils import iter_filter_conditions
+from open_webui.retrieval.vector.utils import iter_filter_conditions, process_metadata
 from qdrant_client import QdrantClient as Qclient
+from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client.http.models import PointStruct
 from qdrant_client.models import models
 
@@ -180,7 +182,7 @@ class QdrantClient(VectorDBBase):
                 vector=item['vector'],
                 payload={
                     'text': item['text'],
-                    'metadata': item['metadata'],
+                    'metadata': process_metadata(item['metadata']),
                     TENANT_ID_FIELD: tenant_id,
                 },
             )

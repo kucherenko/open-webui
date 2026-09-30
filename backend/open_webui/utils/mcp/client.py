@@ -8,7 +8,9 @@ log = logging.getLogger(__name__)
 import anyio
 import httpx
 from mcp import ClientSession
+from mcp.client.auth import OAuthClientProvider, TokenStorage
 from mcp.client.streamable_http import streamablehttp_client
+from mcp.shared.auth import OAuthClientInformationFull, OAuthClientMetadata, OAuthToken
 from open_webui.env import (
     AIOHTTP_CLIENT_SESSION_TOOL_SERVER_SSL,
     AIOHTTP_CLIENT_TIMEOUT_TOOL_SERVER,
@@ -87,8 +89,14 @@ class MCPClient:
         if not self.session:
             raise RuntimeError('MCP client is not connected.')
 
-        result = await self.session.list_tools()
-        tools = result.tools
+        tools = []
+        cursor = None
+        while True:
+            result = await self.session.list_tools(cursor=cursor)
+            tools.extend(result.tools)
+            cursor = result.nextCursor
+            if cursor is None:
+                break
 
         tool_specs = []
         for tool in tools:

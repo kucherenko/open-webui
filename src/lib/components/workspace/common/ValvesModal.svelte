@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { createEventDispatcher } from 'svelte';
-	import { getContext } from 'svelte';
+	import { onMount, getContext } from 'svelte';
+	import { tools, functions } from '$lib/stores';
+	import { addUser } from '$lib/apis/auths';
 
 	import Modal from '../../common/Modal.svelte';
 	import {
@@ -14,12 +16,14 @@
 	import {
 		getUserValvesSpecById as getToolUserValvesSpecById,
 		getUserValvesById as getToolUserValvesById,
-		updateUserValvesById as updateToolUserValvesById
+		updateUserValvesById as updateToolUserValvesById,
+		getTools
 	} from '$lib/apis/tools';
 	import {
 		getUserValvesSpecById as getFunctionUserValvesSpecById,
 		getUserValvesById as getFunctionUserValvesById,
-		updateUserValvesById as updateFunctionUserValvesById
+		updateUserValvesById as updateFunctionUserValvesById,
+		getFunctions
 	} from '$lib/apis/functions';
 
 	import Spinner from '../../common/Spinner.svelte';
@@ -35,6 +39,9 @@
 	export let type = 'tool';
 	export let id = null;
 	export let userValves = false;
+	export let meta = null;
+	$: resourceMeta =
+		meta ?? (type === 'tool' ? $tools : $functions)?.find((item) => item.id === id)?.meta ?? {};
 
 	let saving = false;
 	let loading = false;
@@ -176,7 +183,7 @@
 				>
 					<div>
 						{#if !loading}
-							<Valves {valvesSpec} bind:valves />
+							<Valves {valvesSpec} bind:valves meta={resourceMeta} {userValves} />
 						{:else}
 							<Spinner className="size-5" />
 						{/if}

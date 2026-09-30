@@ -6,7 +6,7 @@ import logging
 import time
 import uuid
 import zipfile
-from typing import Optional
+from typing import List, Optional
 from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -21,10 +21,11 @@ from open_webui.events import EVENTS, publish_event
 from open_webui.internal.db import get_async_session
 from open_webui.models.access_grants import AccessGrants
 from open_webui.models.config import Config
-from open_webui.models.files import FileMetadataResponse, FileModel, Files
+from open_webui.models.files import FileMetadataResponse, FileModel, FileModelResponse, Files
 from open_webui.models.groups import Groups
 from open_webui.models.knowledge import (
     KNOWLEDGE_SORTABLE_FIELDS,
+    KnowledgeDirectoryForm,
     KnowledgeDirectoryModel,
     KnowledgeFileListResponse,
     KnowledgeForm,
@@ -33,7 +34,7 @@ from open_webui.models.knowledge import (
     KnowledgeUserResponse,
 )
 from open_webui.models.models import ModelForm, Models
-from open_webui.retrieval.external import retrieve_external_knowledge_for_connection
+from open_webui.retrieval.external import retrieve_external_knowledge, retrieve_external_knowledge_for_connection
 from open_webui.retrieval.vector.async_client import ASYNC_VECTOR_DB_CLIENT
 from open_webui.routers.retrieval import (
     BatchProcessFilesForm,
@@ -52,36 +53,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 log = logging.getLogger(__name__)
 
 router = APIRouter()
-
-
-async def get_knowledge_or_400(id: str, db: Optional[AsyncSession] = None):
-    knowledge = await Knowledges.get_knowledge_by_id(id=id, db=db)
-    if not knowledge:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-    return knowledge
-
-
-async def check_knowledge_access(knowledge, user, permission: str = 'read', db: Optional[AsyncSession] = None):
-    """Admins and the owner always pass; everyone else needs an access grant for `permission`."""
-    if not (
-        user.role == 'admin'
-        or knowledge.user_id == user.id
-        or await AccessGrants.has_access(
-            user_id=user.id,
-            resource_type='knowledge',
-            resource_id=knowledge.id,
-            permission=permission,
-            db=db,
-        )
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-        )
-
 
 ############################
 # getKnowledgeBases
@@ -178,6 +149,24 @@ def external_knowledge_error():
         status_code=status.HTTP_400_BAD_REQUEST,
         detail='External knowledge bases are read-only.',
     )
+
+
+async def _verify_directory_in_knowledge(
+    id: str,
+    directory_id: str | None,
+    db: AsyncSession,
+    detail: str = ERROR_MESSAGES.NOT_FOUND,
+):
+    """Verify a caller-supplied directory belongs to the knowledge base in the URL. Unset means the root level."""
+    if not directory_id:
+        return None
+
+    directory = await Knowledges.get_directory_by_id(directory_id, db=db)
+    if not directory or directory.knowledge_id != id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=detail,
+        )
 
 
 @router.get('/', response_model=KnowledgeAccessListResponse)
@@ -1247,7 +1236,21 @@ async def update_knowledge_access_by_id(
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    await check_knowledge_access(knowledge, user, permission='write', db=db)
+    if (
+        knowledge.user_id != user.id
+        and not await AccessGrants.has_access(
+            user_id=user.id,
+            resource_type='knowledge',
+            resource_id=knowledge.id,
+            permission='write',
+            db=db,
+        )
+        and user.role != 'admin'
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
+        )
 
     form_data.access_grants = await filter_allowed_access_grants(
         await Config.get('user.permissions'),
@@ -1359,9 +1362,28 @@ async def get_knowledge_files_by_id(
     user=Depends(get_verified_user),
     db: AsyncSession = Depends(get_async_session),
 ):
-    knowledge = await get_knowledge_or_400(id, db=db)
+    knowledge = await Knowledges.get_knowledge_by_id(id=id, db=db)
+    if not knowledge:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
 
-    await check_knowledge_access(knowledge, user, db=db)
+    if not (
+        user.role == 'admin'
+        or knowledge.user_id == user.id
+        or await AccessGrants.has_access(
+            user_id=user.id,
+            resource_type='knowledge',
+            resource_id=knowledge.id,
+            permission='read',
+            db=db,
+        )
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
+        )
 
     page = max(page, 1)
 
@@ -1408,11 +1430,32 @@ async def add_file_to_knowledge_by_id(
     user=Depends(get_verified_user),
     db: AsyncSession = Depends(get_async_session),
 ):
-    knowledge = await get_knowledge_or_400(id, db=db)
+    knowledge = await Knowledges.get_knowledge_by_id(id=id, db=db)
+    if not knowledge:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
     if is_external_knowledge(knowledge):
         external_knowledge_error()
 
-    await check_knowledge_access(knowledge, user, permission='write', db=db)
+    if (
+        knowledge.user_id != user.id
+        and not await AccessGrants.has_access(
+            user_id=user.id,
+            resource_type='knowledge',
+            resource_id=knowledge.id,
+            permission='write',
+            db=db,
+        )
+        and user.role != 'admin'
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
+        )
+
+    await _verify_directory_in_knowledge(id, form_data.directory_id, db, detail='Target directory not found.')
 
     file = await Files.get_file_by_id(form_data.file_id, db=db)
     if not file:
@@ -1486,11 +1529,30 @@ async def update_file_from_knowledge_by_id(
     user=Depends(get_verified_user),
     db: AsyncSession = Depends(get_async_session),
 ):
-    knowledge = await get_knowledge_or_400(id, db=db)
+    knowledge = await Knowledges.get_knowledge_by_id(id=id, db=db)
+    if not knowledge:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
     if is_external_knowledge(knowledge):
         external_knowledge_error()
 
-    await check_knowledge_access(knowledge, user, permission='write', db=db)
+    if (
+        knowledge.user_id != user.id
+        and not await AccessGrants.has_access(
+            user_id=user.id,
+            resource_type='knowledge',
+            resource_id=knowledge.id,
+            permission='write',
+            db=db,
+        )
+        and user.role != 'admin'
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
+        )
 
     file = await Files.get_file_by_id(form_data.file_id, db=db)
     if not file:
@@ -1557,11 +1619,30 @@ async def remove_file_from_knowledge_by_id(
     user=Depends(get_verified_user),
     db: AsyncSession = Depends(get_async_session),
 ):
-    knowledge = await get_knowledge_or_400(id, db=db)
+    knowledge = await Knowledges.get_knowledge_by_id(id=id, db=db)
+    if not knowledge:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
     if is_external_knowledge(knowledge):
         external_knowledge_error()
 
-    await check_knowledge_access(knowledge, user, permission='write', db=db)
+    if (
+        knowledge.user_id != user.id
+        and not await AccessGrants.has_access(
+            user_id=user.id,
+            resource_type='knowledge',
+            resource_id=knowledge.id,
+            permission='write',
+            db=db,
+        )
+        and user.role != 'admin'
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
+        )
 
     file = await Files.get_file_by_id(form_data.file_id, db=db)
     if not file:
@@ -1581,13 +1662,9 @@ async def remove_file_from_knowledge_by_id(
 
     # Remove content from the vector database
     try:
-        await ASYNC_VECTOR_DB_CLIENT.delete(
-            collection_name=knowledge.id, filter={'file_id': form_data.file_id}
-        )  # Remove by file_id first
-
-        await ASYNC_VECTOR_DB_CLIENT.delete(
-            collection_name=knowledge.id, filter={'hash': file.hash}
-        )  # Remove by hash as well in case of duplicates
+        await ASYNC_VECTOR_DB_CLIENT.delete(collection_name=knowledge.id, filter={'file_id': form_data.file_id})
+        if file.hash:
+            await ASYNC_VECTOR_DB_CLIENT.delete(collection_name=knowledge.id, filter={'hash': file.hash})
     except Exception as e:
         log.debug('This was most likely caused by bypassing embedding processing')
         log.debug(e)
@@ -1629,9 +1706,28 @@ async def delete_knowledge_by_id(
     user=Depends(get_verified_user),
     db: AsyncSession = Depends(get_async_session),
 ):
-    knowledge = await get_knowledge_or_400(id, db=db)
+    knowledge = await Knowledges.get_knowledge_by_id(id=id, db=db)
+    if not knowledge:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
 
-    await check_knowledge_access(knowledge, user, permission='write', db=db)
+    if (
+        knowledge.user_id != user.id
+        and not await AccessGrants.has_access(
+            user_id=user.id,
+            resource_type='knowledge',
+            resource_id=knowledge.id,
+            permission='write',
+            db=db,
+        )
+        and user.role != 'admin'
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
+        )
 
     log.info('Deleting knowledge base: %s (name: %s)', id, knowledge.name)
 
@@ -1701,11 +1797,30 @@ async def reset_knowledge_by_id(
     user=Depends(get_verified_user),
     db: AsyncSession = Depends(get_async_session),
 ):
-    knowledge = await get_knowledge_or_400(id, db=db)
+    knowledge = await Knowledges.get_knowledge_by_id(id=id, db=db)
+    if not knowledge:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
     if is_external_knowledge(knowledge):
         external_knowledge_error()
 
-    await check_knowledge_access(knowledge, user, permission='write', db=db)
+    if (
+        knowledge.user_id != user.id
+        and not await AccessGrants.has_access(
+            user_id=user.id,
+            resource_type='knowledge',
+            resource_id=knowledge.id,
+            permission='write',
+            db=db,
+        )
+        and user.role != 'admin'
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
+        )
 
     files = await Knowledges.get_files_by_id(id, db=db) if not ENABLE_KNOWLEDGE_FILE_RETENTION else []
 
@@ -1889,7 +2004,8 @@ async def sync_knowledge_cleanup(
 
         try:
             await ASYNC_VECTOR_DB_CLIENT.delete(collection_name=id, filter={'file_id': file_id})
-            await ASYNC_VECTOR_DB_CLIENT.delete(collection_name=id, filter={'hash': file.hash})
+            if file.hash:
+                await ASYNC_VECTOR_DB_CLIENT.delete(collection_name=id, filter={'hash': file.hash})
         except Exception:
             pass
 
@@ -1928,11 +2044,33 @@ async def add_files_to_knowledge_batch(
     """
     Add multiple files to a knowledge base
     """
-    knowledge = await get_knowledge_or_400(id, db=db)
+    knowledge = await Knowledges.get_knowledge_by_id(id=id, db=db)
+    if not knowledge:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
     if is_external_knowledge(knowledge):
         external_knowledge_error()
 
-    await check_knowledge_access(knowledge, user, permission='write', db=db)
+    if (
+        knowledge.user_id != user.id
+        and not await AccessGrants.has_access(
+            user_id=user.id,
+            resource_type='knowledge',
+            resource_id=knowledge.id,
+            permission='write',
+            db=db,
+        )
+        and user.role != 'admin'
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
+        )
+
+    for directory_id in {form.directory_id for form in form_data if form.directory_id}:
+        await _verify_directory_in_knowledge(id, directory_id, db, detail='Target directory not found.')
 
     # Batch-fetch all files to avoid N+1 queries
     log.info('files/batch/add - %s files', len(form_data))
@@ -2122,6 +2260,8 @@ async def create_knowledge_directory(
 ):
     await _verify_knowledge_write_access(id, user, db)
 
+    await _verify_directory_in_knowledge(id, form_data.parent_id, db, detail='Parent directory not found.')
+
     directory = await Knowledges.create_directory(
         knowledge_id=id,
         name=form_data.name,
@@ -2154,14 +2294,11 @@ async def update_knowledge_directory(
     db: AsyncSession = Depends(get_async_session),
 ):
     await _verify_knowledge_write_access(id, user, db)
+    await _verify_directory_in_knowledge(id, dir_id, db)
 
-    # Verify directory belongs to this knowledge base
-    directory = await Knowledges.get_directory_by_id(dir_id, db=db)
-    if not directory or directory.knowledge_id != id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
+    # '__unset__' leaves the parent alone, None moves the directory to the root
+    if form_data.parent_id not in (None, '__unset__'):
+        await _verify_directory_in_knowledge(id, form_data.parent_id, db, detail='Parent directory not found.')
 
     result = await Knowledges.update_directory(
         directory_id=dir_id,
@@ -2194,14 +2331,10 @@ async def delete_knowledge_directory(
     db: AsyncSession = Depends(get_async_session),
 ):
     await _verify_knowledge_write_access(id, user, db)
+    await _verify_directory_in_knowledge(id, dir_id, db)
 
-    # Verify directory belongs to this knowledge base
-    directory = await Knowledges.get_directory_by_id(dir_id, db=db)
-    if not directory or directory.knowledge_id != id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
+    # Collect before delete_directory drops the KnowledgeFile rows
+    files = [] if move_files else await Knowledges.get_files_by_id_and_directory_id(id, dir_id, db=db)
 
     success = await Knowledges.delete_directory(
         directory_id=dir_id,
@@ -2213,6 +2346,23 @@ async def delete_knowledge_directory(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail='Failed to delete directory.',
         )
+
+    for file in files:
+        try:
+            await ASYNC_VECTOR_DB_CLIENT.delete(collection_name=id, filter={'file_id': file.id})
+            if file.hash:
+                await ASYNC_VECTOR_DB_CLIENT.delete(collection_name=id, filter={'hash': file.hash})
+        except Exception as e:
+            log.debug('This was most likely caused by bypassing embedding processing')
+            log.debug(e)
+
+        if (
+            not ENABLE_KNOWLEDGE_FILE_RETENTION
+            and not await Knowledges.get_knowledges_by_file_id(file.id, db=db)
+            and (file.user_id == user.id or user.role == 'admin')
+        ):
+            await delete_file_resource(file, db)
+
     await publish_event(
         request,
         EVENTS.KNOWLEDGE_DIRECTORY_DELETED,
@@ -2240,14 +2390,7 @@ async def move_file_in_knowledge(
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    # If target directory is set, verify it belongs to this knowledge base
-    if form_data.directory_id:
-        directory = await Knowledges.get_directory_by_id(form_data.directory_id, db=db)
-        if not directory or directory.knowledge_id != id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail='Target directory not found.',
-            )
+    await _verify_directory_in_knowledge(id, form_data.directory_id, db, detail='Target directory not found.')
 
     success = await Knowledges.move_file_to_directory(
         knowledge_id=id,

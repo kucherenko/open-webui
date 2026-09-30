@@ -1,4 +1,3 @@
-import { apiRequest } from '$lib/apis/request';
 import { WEBUI_API_BASE_URL } from '$lib/constants';
 import { splitStream } from '$lib/utils';
 
@@ -121,14 +120,63 @@ export const getFileProcessStatus = async (token: string, id: string) => {
 };
 
 export const uploadDir = async (token: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/files/upload/dir`, { method: 'POST', token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/files/upload/dir`, {
+		method: 'POST',
+		headers: {
+			Accept: 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getFiles = async (token: string = '', content: boolean = false) => {
+	let error = null;
+
 	const searchParams = new URLSearchParams();
 	searchParams.append('content', String(content));
 
-	return apiRequest(`${WEBUI_API_BASE_URL}/files/?${searchParams.toString()}`, { token });
+	const res = await fetch(`${WEBUI_API_BASE_URL}/files/?${searchParams.toString()}`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const searchFiles = async (
@@ -172,21 +220,96 @@ export const searchFiles = async (
 };
 
 export const getFileCount = async (token: string = '') => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/files/count`, { token, getError: (err) => err });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/files/count`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getFileById = async (token: string, id: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/files/${id}`, { token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/files/${id}`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const updateFileDataContentById = async (token: string, id: string, content: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/files/${id}/data/content/update`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/files/${id}/data/content/update`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
 			content: content
-		}
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getFileContentById = async (id: string) => {
@@ -218,17 +341,92 @@ export const getFileContentById = async (id: string) => {
 };
 
 export const renameFileById = async (token: string, id: string, filename: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/files/${id}/rename`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/files/${id}/rename`, {
 		method: 'POST',
-		token,
-		body: { filename }
-	});
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({ filename })
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const deleteFileById = async (token: string, id: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/files/${id}`, { method: 'DELETE', token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/files/${id}`, {
+		method: 'DELETE',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const deleteAllFiles = async (token: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/files/all`, { method: 'DELETE', token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/files/all`, {
+		method: 'DELETE',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.then((json) => {
+			return json;
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };

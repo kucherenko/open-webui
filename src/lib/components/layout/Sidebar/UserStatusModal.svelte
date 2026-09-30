@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { getContext, tick } from 'svelte';
+	import { getContext, createEventDispatcher, onMount, tick } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import { toast } from 'svelte-sonner';
+	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
 
 	import { updateUserStatus } from '$lib/apis/users';
 	import { settings, user } from '$lib/stores';

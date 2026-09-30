@@ -1,38 +1,146 @@
-import { apiRequest } from '$lib/apis/request';
 import { WEBUI_API_BASE_URL } from '$lib/constants';
 import { getUserPosition } from '$lib/utils';
 
 export const getUserGroups = async (token: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/users/groups`, { token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/groups`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getUserDefaultPermissions = async (token: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/users/default/permissions`, { token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/default/permissions`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const updateUserDefaultPermissions = async (token: string, permissions: object) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/users/default/permissions`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/default/permissions`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
 			...permissions
-		}
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getUserDefaultPermissionsDefaults = async (token: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/users/default/permissions/defaults`, { token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/default/permissions/defaults`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const updateUserRole = async (token: string, id: string, role: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/users/update/role`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/update/role`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
 			id: id,
 			role: role
-		}
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getUsers = async (
@@ -167,62 +275,228 @@ export const getAllUsers = async (token: string) => {
 };
 
 export const getUserSettings = async (token: string, raw = false) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/users/user/settings${raw ? '?raw=true' : ''}`, {
-		token,
-		getError: (err) => err?.detail ?? err
-	});
+	let error = null;
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/user/settings${raw ? '?raw=true' : ''}`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err?.detail ?? err;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const updateUserSettings = async (token: string, settings: object) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/users/user/settings/update`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/user/settings/update`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
 			...settings
-		}
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getUserInfoById = async (token: string, userId: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/users/${userId}/info`, { token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/${userId}/info`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const updateUserStatus = async (token: string, formData: object) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/users/user/status/update`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/user/status/update`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
 			...formData
-		}
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getUserInfo = async (token: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/users/user/info`, { token });
+	let error = null;
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/user/info`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const updateUserInfo = async (token: string, info: object) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/users/user/info/update`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/user/info/update`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
 			...info
-		}
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getUserVariables = async (token: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/users/user/variables`, { token });
+	let error = null;
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/user/variables`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const updateUserVariables = async (token: string, variables: Record<string, string>) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/users/user/variables/update`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/user/variables/update`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
 			variables
-		}
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getAndUpdateUserLocation = async (token: string) => {
@@ -241,11 +515,57 @@ export const getAndUpdateUserLocation = async (token: string) => {
 };
 
 export const getUserActiveStatusById = async (token: string, userId: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/users/${userId}/active`, { token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/${userId}/active`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const deleteUserById = async (token: string, userId: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/users/${userId}`, { method: 'DELETE', token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/${userId}`, {
+		method: 'DELETE',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 type UserUpdateForm = {
@@ -257,25 +577,91 @@ type UserUpdateForm = {
 };
 
 export const updateUserById = async (token: string, userId: string, user: UserUpdateForm) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/users/${userId}/update`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/${userId}/update`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
 			profile_image_url: user.profile_image_url,
 			role: user.role,
 			email: user.email,
 			name: user.name,
 			password: user.password !== '' ? user.password : undefined
-		}
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getUserGroupsById = async (token: string, userId: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/users/${userId}/groups`, { token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/${userId}/groups`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getUserPreview = async (token: string, userId: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/users/${userId}/preview`, { token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/${userId}/preview`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export type UserUsageHeatmapEntry = {
@@ -331,11 +717,33 @@ export const getUserUsage = async (
 	token: string,
 	options: { days?: number; startDate?: number | null; endDate?: number | null } = {}
 ): Promise<UserUsageResponse | null> => {
+	let error = null;
 	const searchParams = new URLSearchParams();
 
 	if (options.days) searchParams.append('days', options.days.toString());
 	if (options.startDate) searchParams.append('start_date', options.startDate.toString());
 	if (options.endDate) searchParams.append('end_date', options.endDate.toString());
 
-	return apiRequest(`${WEBUI_API_BASE_URL}/users/usage?${searchParams.toString()}`, { token });
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/usage?${searchParams.toString()}`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };

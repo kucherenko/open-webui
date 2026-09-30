@@ -3,7 +3,7 @@
 
 	const i18n = getContext('i18n');
 
-	import { getGroups, getGroupInfoById } from '$lib/apis/groups';
+	import { getGroups, getGroupById, getGroupInfoById } from '$lib/apis/groups';
 	import { getUserInfoById } from '$lib/apis/users';
 	import { WEBUI_API_BASE_URL } from '$lib/constants';
 	import XMark from '$lib/components/icons/XMark.svelte';
@@ -609,7 +609,7 @@
 						{#if accessRoles.includes('write')}
 							<select
 								aria-label={$i18n.t('Access level')}
-								class="bg-transparent text-sm outline-none"
+								class="bg-transparent text-sm outline-none pr-5"
 								value={writeGroupIds.includes(group.id) ? 'write' : 'read'}
 								on:change={(e) => {
 									if (
@@ -663,7 +663,7 @@
 							{#if accessRoles.includes('write')}
 								<select
 									aria-label={$i18n.t('Access level')}
-									class="bg-transparent text-sm outline-none"
+									class="bg-transparent text-sm outline-none pr-5"
 									value={writeUserIds.includes(user.id) ? 'write' : 'read'}
 									on:change={(e) => {
 										if (

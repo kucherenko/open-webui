@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getContext } from 'svelte';
+	import { getContext, tick } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
@@ -41,7 +41,13 @@
 					? 'opacity-50'
 					: ''}"
 			>
-				<Tooltip content={connection?.type === 'mcp' ? $i18n.t('MCP') : $i18n.t('OpenAPI')}>
+				<Tooltip
+					content={connection?.type === 'mcp'
+						? $i18n.t('settings.admin.integrations.mcp.label')
+						: direct
+							? $i18n.t('settings.personal.tools.openApi.label')
+							: $i18n.t('settings.admin.integrations.openApi.label')}
+				>
 					<WrenchAlt />
 				</Tooltip>
 

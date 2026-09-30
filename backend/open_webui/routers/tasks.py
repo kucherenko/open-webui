@@ -1,8 +1,9 @@
 import logging
+import re
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi.responses import JSONResponse, RedirectResponse
 from open_webui.config import (
     DEFAULT_AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE,
     DEFAULT_EMOJI_GENERATION_PROMPT_TEMPLATE,
@@ -12,6 +13,7 @@ from open_webui.config import (
     DEFAULT_QUERY_GENERATION_PROMPT_TEMPLATE,
     DEFAULT_TAGS_GENERATION_PROMPT_TEMPLATE,
     DEFAULT_TITLE_GENERATION_PROMPT_TEMPLATE,
+    DEFAULT_VOICE_MODE_PROMPT_TEMPLATE,
 )
 from open_webui.constants import ERROR_MESSAGES, TASKS
 from open_webui.models.config import Config
@@ -35,40 +37,6 @@ from pydantic import BaseModel
 log = logging.getLogger(__name__)
 
 router = APIRouter()
-
-
-def _get_request_models(request: Request) -> dict:
-    """App models, plus the request's own model for direct connections."""
-    if getattr(request.state, 'direct', False) and hasattr(request.state, 'model'):
-        return {
-            **dict(request.app.state.MODELS.items()),
-            request.state.model['id']: request.state.model,
-        }
-    return request.app.state.MODELS
-
-
-def _check_model_exists(model_id: str, models: dict):
-    if model_id not in models:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.MODEL_NOT_FOUND(),
-        )
-
-
-async def _run_task_completion(request: Request, payload: dict, user, models: dict, task_model_id, task_model_params):
-    """Run a task payload through the inlet filters and the task model's completion."""
-    payload = await process_pipeline_inlet_filter(request, payload, user, models)
-    payload = apply_task_model_params(payload, models, task_model_id, task_model_params)
-
-    try:
-        return await generate_chat_completion(request, form_data=payload, user=user)
-    except Exception:
-        log.error('Exception occurred', exc_info=True)
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            content={'detail': 'An internal error has occurred.'},
-        )
-
 
 TASK_CONFIG_KEYS = {
     'TASK_MODEL': 'task.model.default',
@@ -178,7 +146,13 @@ async def generate_title(request: Request, form_data: dict, user=Depends(get_ver
             content={'detail': 'Title generation is disabled'},
         )
 
-    models = _get_request_models(request)
+    if getattr(request.state, 'direct', False) and hasattr(request.state, 'model'):
+        models = {
+            **dict(request.app.state.MODELS.items()),
+            request.state.model['id']: request.state.model,
+        }
+    else:
+        models = request.app.state.MODELS
 
     model_id = form_data['model']
     if not model_id:
@@ -186,7 +160,11 @@ async def generate_title(request: Request, form_data: dict, user=Depends(get_ver
             status_code=status.HTTP_400_BAD_REQUEST,
             detail='No model specified for title generation. Please ensure a model is selected for this chat.',
         )
-    _check_model_exists(model_id, models)
+    if model_id not in models:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.MODEL_NOT_FOUND(),
+        )
 
     task_model_id, task_model_params = await get_task_model_generation_config(model_id, models)
 
@@ -215,7 +193,22 @@ async def generate_title(request: Request, form_data: dict, user=Depends(get_ver
         },
     }
 
-    return await _run_task_completion(request, payload, user, models, task_model_id, task_model_params)
+    # Process the payload through the pipeline
+    try:
+        payload = await process_pipeline_inlet_filter(request, payload, user, models)
+    except Exception as e:
+        raise e
+
+    payload = apply_task_model_params(payload, models, task_model_id, task_model_params)
+
+    try:
+        return await generate_chat_completion(request, form_data=payload, user=user)
+    except Exception as e:
+        log.error('Exception occurred', exc_info=True)
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={'detail': 'An internal error has occurred.'},
+        )
 
 
 @router.post('/follow_up/completions')
@@ -226,10 +219,20 @@ async def generate_follow_ups(request: Request, form_data: dict, user=Depends(ge
             content={'detail': 'Follow-up generation is disabled'},
         )
 
-    models = _get_request_models(request)
+    if getattr(request.state, 'direct', False) and hasattr(request.state, 'model'):
+        models = {
+            **dict(request.app.state.MODELS.items()),
+            request.state.model['id']: request.state.model,
+        }
+    else:
+        models = request.app.state.MODELS
 
     model_id = form_data['model']
-    _check_model_exists(model_id, models)
+    if model_id not in models:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.MODEL_NOT_FOUND(),
+        )
 
     task_model_id, task_model_params = await get_task_model_generation_config(model_id, models)
 
@@ -255,7 +258,22 @@ async def generate_follow_ups(request: Request, form_data: dict, user=Depends(ge
         },
     }
 
-    return await _run_task_completion(request, payload, user, models, task_model_id, task_model_params)
+    # Process the payload through the pipeline
+    try:
+        payload = await process_pipeline_inlet_filter(request, payload, user, models)
+    except Exception as e:
+        raise e
+
+    payload = apply_task_model_params(payload, models, task_model_id, task_model_params)
+
+    try:
+        return await generate_chat_completion(request, form_data=payload, user=user)
+    except Exception as e:
+        log.error('Exception occurred', exc_info=True)
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={'detail': 'An internal error has occurred.'},
+        )
 
 
 @router.post('/tags/completions')
@@ -266,10 +284,20 @@ async def generate_chat_tags(request: Request, form_data: dict, user=Depends(get
             content={'detail': 'Tags generation is disabled'},
         )
 
-    models = _get_request_models(request)
+    if getattr(request.state, 'direct', False) and hasattr(request.state, 'model'):
+        models = {
+            **dict(request.app.state.MODELS.items()),
+            request.state.model['id']: request.state.model,
+        }
+    else:
+        models = request.app.state.MODELS
 
     model_id = form_data['model']
-    _check_model_exists(model_id, models)
+    if model_id not in models:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.MODEL_NOT_FOUND(),
+        )
 
     task_model_id, task_model_params = await get_task_model_generation_config(model_id, models)
 
@@ -315,10 +343,20 @@ async def generate_chat_tags(request: Request, form_data: dict, user=Depends(get
 
 @router.post('/image_prompt/completions')
 async def generate_image_prompt(request: Request, form_data: dict, user=Depends(get_verified_user)):
-    models = _get_request_models(request)
+    if getattr(request.state, 'direct', False) and hasattr(request.state, 'model'):
+        models = {
+            **dict(request.app.state.MODELS.items()),
+            request.state.model['id']: request.state.model,
+        }
+    else:
+        models = request.app.state.MODELS
 
     model_id = form_data['model']
-    _check_model_exists(model_id, models)
+    if model_id not in models:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.MODEL_NOT_FOUND(),
+        )
 
     task_model_id, task_model_params = await get_task_model_generation_config(model_id, models)
 
@@ -344,7 +382,22 @@ async def generate_image_prompt(request: Request, form_data: dict, user=Depends(
         },
     }
 
-    return await _run_task_completion(request, payload, user, models, task_model_id, task_model_params)
+    # Process the payload through the pipeline
+    try:
+        payload = await process_pipeline_inlet_filter(request, payload, user, models)
+    except Exception as e:
+        raise e
+
+    payload = apply_task_model_params(payload, models, task_model_id, task_model_params)
+
+    try:
+        return await generate_chat_completion(request, form_data=payload, user=user)
+    except Exception as e:
+        log.error('Exception occurred', exc_info=True)
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={'detail': 'An internal error has occurred.'},
+        )
 
 
 @router.post('/queries/completions')
@@ -367,10 +420,20 @@ async def generate_queries(request: Request, form_data: dict, user=Depends(get_v
         log.info('Reusing cached queries: %s', request.state.cached_queries)
         return request.state.cached_queries
 
-    models = _get_request_models(request)
+    if getattr(request.state, 'direct', False) and hasattr(request.state, 'model'):
+        models = {
+            **dict(request.app.state.MODELS.items()),
+            request.state.model['id']: request.state.model,
+        }
+    else:
+        models = request.app.state.MODELS
 
     model_id = form_data['model']
-    _check_model_exists(model_id, models)
+    if model_id not in models:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.MODEL_NOT_FOUND(),
+        )
 
     task_model_id, task_model_params = await get_task_model_generation_config(model_id, models)
 
@@ -433,10 +496,20 @@ async def generate_autocompletion(request: Request, form_data: dict, user=Depend
                 detail=ERROR_MESSAGES.INPUT_TOO_LONG(autocomplete_input_max_length),
             )
 
-    models = _get_request_models(request)
+    if getattr(request.state, 'direct', False) and hasattr(request.state, 'model'):
+        models = {
+            **dict(request.app.state.MODELS.items()),
+            request.state.model['id']: request.state.model,
+        }
+    else:
+        models = request.app.state.MODELS
 
     model_id = form_data['model']
-    _check_model_exists(model_id, models)
+    if model_id not in models:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.MODEL_NOT_FOUND(),
+        )
 
     task_model_id, task_model_params = await get_task_model_generation_config(model_id, models)
 
@@ -482,10 +555,20 @@ async def generate_autocompletion(request: Request, form_data: dict, user=Depend
 
 @router.post('/emoji/completions')
 async def generate_emoji(request: Request, form_data: dict, user=Depends(get_verified_user)):
-    models = _get_request_models(request)
+    if getattr(request.state, 'direct', False) and hasattr(request.state, 'model'):
+        models = {
+            **dict(request.app.state.MODELS.items()),
+            request.state.model['id']: request.state.model,
+        }
+    else:
+        models = request.app.state.MODELS
 
     model_id = form_data['model']
-    _check_model_exists(model_id, models)
+    if model_id not in models:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.MODEL_NOT_FOUND(),
+        )
 
     task_model_id, _ = await get_task_model_generation_config(model_id, models)
 
@@ -526,11 +609,21 @@ async def generate_emoji(request: Request, form_data: dict, user=Depends(get_ver
 
 @router.post('/moa/completions')
 async def generate_moa_response(request: Request, form_data: dict, user=Depends(get_verified_user)):
-    models = _get_request_models(request)
+    if getattr(request.state, 'direct', False) and hasattr(request.state, 'model'):
+        models = {
+            **dict(request.app.state.MODELS.items()),
+            request.state.model['id']: request.state.model,
+        }
+    else:
+        models = request.app.state.MODELS
 
     model_id = form_data['model']
 
-    _check_model_exists(model_id, models)
+    if model_id not in models:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.MODEL_NOT_FOUND(),
+        )
 
     template = DEFAULT_MOA_GENERATION_PROMPT_TEMPLATE
 

@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { getContext, onDestroy } from 'svelte';
+	import { getContext, onMount, onDestroy } from 'svelte';
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
+	import { highlightCode } from '$lib/utils/codeHighlight';
 	import {
 		createNotebookSession,
 		executeNotebookCell,
@@ -11,7 +12,7 @@
 	import Tooltip from '../../common/Tooltip.svelte';
 	import CellEditor from './CellEditor.svelte';
 
-	const i18n = getContext('i18n');
+	const i18n: any = getContext('i18n');
 
 	export let notebook: Record<string, unknown>;
 	export let filePath: string = '';
@@ -308,7 +309,7 @@
 								class="nb-run-btn"
 								on:click={() => runCell(i)}
 								disabled={runningCell !== null}
-								title="Run cell (⌘+Enter)"
+								title={$i18n.t('Run cell (⌘+Enter)')}
 							>
 								<svg
 									xmlns="http://www.w3.org/2000/svg"

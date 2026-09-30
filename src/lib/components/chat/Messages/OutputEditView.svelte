@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { getContext, onDestroy, tick } from 'svelte';
+	import { slide } from 'svelte/transition';
+	import { quintOut } from 'svelte/easing';
 
 	import { basicSetup, EditorView } from 'codemirror';
 	import { keymap } from '@codemirror/view';
@@ -138,7 +140,7 @@
 		return (item.content ?? [])
 			.filter((p: any) => p && (p.type === 'output_text' || 'text' in p))
 			.map((p: any) => p.text ?? '')
-			.join('\n');
+			.join('');
 	}
 
 	function updateMessageText(idx: number, text: string) {

@@ -11,7 +11,7 @@ import uuid
 from datetime import timedelta
 from functools import lru_cache
 from pathlib import Path
-from typing import Sequence, Union
+from typing import Callable, Optional, Sequence, Union
 
 import aiohttp
 import mimeparse
@@ -1221,6 +1221,12 @@ def strict_match_mime_type(supported: list[str] | str, header: str) -> str | Non
     except Exception as e:
         log.exception(f'Failed to match mime type {header}: {e}')
         return None
+
+
+def is_raster_image_content_type(content_type: str | None) -> bool:
+    """Return True if the content type is an image that decodes as a bitmap; SVG is XML."""
+    base_content_type = (content_type or '').split(';')[0].strip().lower()
+    return base_content_type.startswith('image/') and base_content_type != 'image/svg+xml'
 
 
 def extract_urls(text: str) -> list[str]:

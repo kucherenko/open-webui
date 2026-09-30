@@ -1,8 +1,11 @@
 <script lang="ts">
-	import { getContext } from 'svelte';
+	import { getContext, onMount, tick } from 'svelte';
 	import { fly } from 'svelte/transition';
 
-	import { config, user, mobile, knowledge } from '$lib/stores';
+	import { config, user, tools as _tools, mobile, knowledge } from '$lib/stores';
+	import { getKnowledgeBases } from '$lib/apis/knowledge';
+
+	import { createPicker } from '$lib/utils/google-drive-picker';
 
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
 	import DropdownMenu from '$lib/components/common/DropdownMenu.svelte';
@@ -25,7 +28,7 @@
 	import AttachWebpageModal from './AttachWebpageModal.svelte';
 	import GlobeAlt from '$lib/components/icons/GlobeAlt.svelte';
 
-	const i18n = getContext('i18n');
+	const i18n: any = getContext('i18n');
 
 	export let files = [];
 
@@ -51,13 +54,13 @@
 	const toolApprovalModes = [
 		{
 			value: 'full',
-			label: 'Full access',
-			description: 'Run tools without asking for approval.'
+			label: $i18n.t('Full access'),
+			description: $i18n.t('Run tools without asking for approval.')
 		},
 		{
 			value: 'ask',
-			label: 'Ask for approval',
-			description: 'Stop before each tool call until you allow or deny it.'
+			label: $i18n.t('Ask for approval'),
+			description: $i18n.t('Stop before each tool call until you allow or deny it.')
 		}
 	];
 

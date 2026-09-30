@@ -1,4 +1,3 @@
-import { apiRequest } from '$lib/apis/request';
 import { WEBUI_API_BASE_URL } from '$lib/constants';
 
 export type CalendarModel = {
@@ -54,7 +53,7 @@ export type CalendarEventForm = {
 	start_at: number;
 	end_at?: number;
 	all_day?: boolean;
-	rrule?: string;
+	rrule?: string | null;
 	color?: string;
 	location?: string | null;
 	data?: Record<string, any>;
@@ -73,15 +72,60 @@ export type CalendarForm = {
 // ── Calendars ─────────────────────────────────
 
 export const getCalendars = async (token: string): Promise<CalendarModel[]> => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/calendars/`, { token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/calendars/`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const createCalendar = async (token: string, form: CalendarForm): Promise<CalendarModel> => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/calendars/create`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/calendars/create`, {
 		method: 'POST',
-		token,
-		body: form
-	});
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify(form)
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const updateCalendar = async (
@@ -89,18 +133,58 @@ export const updateCalendar = async (
 	calendarId: string,
 	form: Partial<CalendarForm>
 ): Promise<CalendarModel> => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/calendars/${calendarId}/update`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/calendars/${calendarId}/update`, {
 		method: 'POST',
-		token,
-		body: form
-	});
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify(form)
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const deleteCalendar = async (token: string, calendarId: string): Promise<boolean> => {
-	const res = await apiRequest(`${WEBUI_API_BASE_URL}/calendars/${calendarId}/delete`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/calendars/${calendarId}/delete`, {
 		method: 'DELETE',
-		token
-	});
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
 
 	return res?.status ?? false;
 };
@@ -109,10 +193,31 @@ export const setDefaultCalendar = async (
 	token: string,
 	calendarId: string
 ): Promise<CalendarModel> => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/calendars/${calendarId}/default`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/calendars/${calendarId}/default`, {
 		method: 'POST',
-		token
-	});
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 // ── Events ─────────────────────────────────
@@ -123,6 +228,8 @@ export const getCalendarEvents = async (
 	end: string,
 	calendarIds?: string[]
 ): Promise<CalendarEventModel[]> => {
+	let error = null;
+
 	const params = new URLSearchParams();
 	params.append('start', start);
 	params.append('end', end);
@@ -130,25 +237,92 @@ export const getCalendarEvents = async (
 		params.append('calendar_ids', calendarIds.join(','));
 	}
 
-	return apiRequest(`${WEBUI_API_BASE_URL}/calendars/events?${params.toString()}`, { token });
+	const res = await fetch(`${WEBUI_API_BASE_URL}/calendars/events?${params.toString()}`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const createCalendarEvent = async (
 	token: string,
 	form: CalendarEventForm
 ): Promise<CalendarEventModel> => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/calendars/events/create`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/calendars/events/create`, {
 		method: 'POST',
-		token,
-		body: form
-	});
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify(form)
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getCalendarEventById = async (
 	token: string,
 	eventId: string
 ): Promise<CalendarEventModel> => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/calendars/events/${eventId}`, { token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/calendars/events/${eventId}`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const updateCalendarEvent = async (
@@ -156,18 +330,58 @@ export const updateCalendarEvent = async (
 	eventId: string,
 	form: Partial<CalendarEventForm>
 ): Promise<CalendarEventModel> => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/calendars/events/${eventId}/update`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/calendars/events/${eventId}/update`, {
 		method: 'POST',
-		token,
-		body: form
-	});
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify(form)
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const deleteCalendarEvent = async (token: string, eventId: string): Promise<boolean> => {
-	const res = await apiRequest(`${WEBUI_API_BASE_URL}/calendars/events/${eventId}/delete`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/calendars/events/${eventId}/delete`, {
 		method: 'DELETE',
-		token
-	});
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
 
 	return res?.status ?? false;
 };
@@ -177,11 +391,32 @@ export const rsvpCalendarEvent = async (
 	eventId: string,
 	status: string
 ): Promise<{ status: boolean; rsvp: string }> => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/calendars/events/${eventId}/rsvp`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/calendars/events/${eventId}/rsvp`, {
 		method: 'POST',
-		token,
-		body: { status }
-	});
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({ status })
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const searchCalendarEvents = async (
@@ -190,12 +425,34 @@ export const searchCalendarEvents = async (
 	skip: number = 0,
 	limit: number = 30
 ): Promise<{ items: CalendarEventModel[]; total: number }> => {
+	let error = null;
+
 	const params = new URLSearchParams();
 	if (query) params.append('query', query);
 	params.append('skip', skip.toString());
 	params.append('limit', limit.toString());
 
-	return apiRequest(`${WEBUI_API_BASE_URL}/calendars/events/search?${params.toString()}`, {
-		token
-	});
+	const res = await fetch(`${WEBUI_API_BASE_URL}/calendars/events/search?${params.toString()}`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };

@@ -1,5 +1,5 @@
 <script>
-	import { getContext, tick } from 'svelte';
+	import { getContext, onMount, tick } from 'svelte';
 	import { goto } from '$app/navigation';
 
 	const i18n = getContext('i18n');
@@ -10,6 +10,11 @@
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import ChevronLeft from '$lib/components/icons/ChevronLeft.svelte';
+	import LanguageModeSelect from '$lib/components/common/LanguageModeSelect.svelte';
+	import LocalizedField from '$lib/components/common/LocalizedField.svelte';
+	import PluginTranslations from '$lib/components/workspace/common/PluginTranslations.svelte';
+	import { pruneEmptyLocaleEntries } from '$lib/utils/localizedContent';
+	let locale = '';
 
 	let formElement = null;
 	let loading = false;
@@ -22,6 +27,7 @@
 
 	export let id = '';
 	export let name = '';
+	/** @type {{description: string, i18n?: Record<string, Record<string, string>>, manifest?: {translations?: Record<string, Record<string, string>>}}} */
 	export let meta = {
 		description: ''
 	};
@@ -165,13 +171,172 @@ class Event:
 		setStarterType(value === 'event' ? 'event' : 'filter');
 	};
 
+	const _boilerplate = `from pydantic import BaseModel
+from typing import Optional, Union, Generator, Iterator
+from open_webui.utils.misc import get_last_user_message
+
+import os
+import requests
+
+
+# Filter Class: This class is designed to serve as a pre-processor and post-processor
+# for request and response modifications. It checks and transforms requests and responses
+# to ensure they meet specific criteria before further processing or returning to the user.
+class Filter:
+    class Valves(BaseModel):
+        max_turns: int = 4
+        pass
+
+    def __init__(self):
+        # Indicates custom file handling logic. This flag helps disengage default routines in favor of custom
+        # implementations, informing the WebUI to defer file-related operations to designated methods within this class.
+        # Alternatively, you can remove the files directly from the body in from the inlet hook
+        self.file_handler = True
+
+        # Initialize 'valves' with specific configurations. Using 'Valves' instance helps encapsulate settings,
+        # which ensures settings are managed cohesively and not confused with operational flags like 'file_handler'.
+        self.valves = self.Valves(**{"max_turns": 2})
+        pass
+
+    def inlet(self, body: dict, user: Optional[dict] = None) -> dict:
+        # Modify the request body or validate it before processing by the chat completion API.
+        # This function is the pre-processor for the API where various checks on the input can be performed.
+        # It can also modify the request before sending it to the API.
+        print(f"inlet:{__name__}")
+        print(f"inlet:body:{body}")
+        print(f"inlet:user:{user}")
+
+        if user.get("role", "admin") in ["user", "admin"]:
+            messages = body.get("messages", [])
+            if len(messages) > self.valves.max_turns:
+                raise Exception(
+                    f"Conversation turn limit exceeded. Max turns: {self.valves.max_turns}"
+                )
+
+        return body
+
+    def request(self, body: dict, user: Optional[dict] = None) -> dict:
+        # Modify the request body before each model/provider call.
+        print(f"request:{__name__}")
+        print(f"request:body:{body}")
+        print(f"request:user:{user}")
+
+        return body
+
+    def outlet(self, body: dict, user: Optional[dict] = None) -> dict:
+        # Modify or analyze the response body after processing by the API.
+        # This function is the post-processor for the API, which can be used to modify the response
+        # or perform additional checks and analytics.
+        print(f"outlet:{__name__}")
+        print(f"outlet:body:{body}")
+        print(f"outlet:user:{user}")
+
+        messages = [
+            {
+                **message,
+                "content": f"{message['content']} - @@Modified from Filter Outlet",
+            }
+            for message in body.get("messages", [])
+        ]
+
+        return {"messages": messages}
+
+
+
+# Pipe Class: This class functions as a customizable pipeline.
+# It can be adapted to work with any external or internal models,
+# making it versatile for various use cases outside of just OpenAI models.
+class Pipe:
+    class Valves(BaseModel):
+        OPENAI_API_BASE_URL: str = "https://api.openai.com/v1"
+        OPENAI_API_KEY: str = "your-key"
+        pass
+
+    def __init__(self):
+        self.type = "manifold"
+        self.valves = self.Valves()
+        self.pipes = self.get_openai_models()
+        pass
+
+    def get_openai_models(self):
+        if self.valves.OPENAI_API_KEY:
+            try:
+                headers = {}
+                headers["Authorization"] = f"Bearer {self.valves.OPENAI_API_KEY}"
+                headers["Content-Type"] = "application/json"
+
+                r = requests.get(
+                    f"{self.valves.OPENAI_API_BASE_URL}/models", headers=headers
+                )
+
+                models = r.json()
+                return [
+                    {
+                        "id": model["id"],
+                        "name": model["name"] if "name" in model else model["id"],
+                    }
+                    for model in models["data"]
+                    if "gpt" in model["id"]
+                ]
+
+            except Exception as e:
+
+                print(f"Error: {e}")
+                return [
+                    {
+                        "id": "error",
+                        "name": "Could not fetch models from OpenAI, please update the API Key in the valves.",
+                    },
+                ]
+        else:
+            return []
+
+    def pipe(self, body: dict) -> Union[str, Generator, Iterator]:
+        # This is where you can add your custom pipelines like RAG.
+        print(f"pipe:{__name__}")
+
+        if "user" in body:
+            print(body["user"])
+            del body["user"]
+
+        headers = {}
+        headers["Authorization"] = f"Bearer {self.valves.OPENAI_API_KEY}"
+        headers["Content-Type"] = "application/json"
+
+        model_id = body["model"][body["model"].find(".") + 1 :]
+        payload = {**body, "model": model_id}
+        print(payload)
+
+        try:
+            r = requests.post(
+                url=f"{self.valves.OPENAI_API_BASE_URL}/chat/completions",
+                json=payload,
+                headers=headers,
+                stream=True,
+            )
+
+            r.raise_for_status()
+
+            if body["stream"]:
+                return r.iter_lines()
+            else:
+                return r.json()
+        except Exception as e:
+            return f"Error: {e}"
+`;
+
 	const saveHandler = async () => {
+		if (!name.trim() || !meta.description?.trim()) {
+			locale = '';
+			toast.error($i18n.t('Name and description are required'));
+			return;
+		}
 		loading = true;
 		try {
 			await onSave({
 				id,
 				name,
-				meta,
+				meta: { ...meta, i18n: pruneEmptyLocaleEntries(meta.i18n) },
 				content
 			});
 		} finally {
@@ -222,15 +387,14 @@ class Event:
 			<span>{$i18n.t('Back')}</span>
 		</button>
 
-		<div class="flex shrink-0 items-start gap-2 pb-2 px-1">
-			<div class="min-w-0 flex-1">
+		<div class="flex shrink-0 flex-col gap-2 pb-2 px-1 sm:flex-row sm:items-start">
+			<div class="min-w-0 w-full flex-1">
 				<Tooltip content={$i18n.t('e.g. My Filter')} placement="top-start">
-					<input
-						class="w-full bg-transparent text-sm outline-hidden"
-						type="text"
+					<LocalizedField
 						placeholder={$i18n.t('Function Name')}
-						aria-label={$i18n.t('Function Name')}
 						bind:value={name}
+						bind:translations={meta.i18n}
+						{locale}
 						required
 					/>
 				</Tooltip>
@@ -263,12 +427,12 @@ class Event:
 						content={$i18n.t('e.g. A filter to remove profanity from text')}
 						placement="top-start"
 					>
-						<input
-							class="w-full bg-transparent outline-hidden"
-							type="text"
+						<LocalizedField
 							placeholder={$i18n.t('Function Description')}
-							aria-label={$i18n.t('Function Description')}
 							bind:value={meta.description}
+							bind:translations={meta.i18n}
+							{locale}
+							field="description"
 							required
 						/>
 					</Tooltip>
@@ -276,6 +440,10 @@ class Event:
 			</div>
 
 			<div class="flex shrink-0 items-center gap-1">
+				<LanguageModeSelect
+					bind:value={locale}
+					translatedLocales={Object.keys(pruneEmptyLocaleEntries(meta.i18n))}
+				/>
 				{#if !edit}
 					<select
 						class="h-7 rounded-lg border border-gray-100 bg-transparent px-2 text-xs outline-hidden dark:border-gray-800"
@@ -290,32 +458,42 @@ class Event:
 			</div>
 		</div>
 
-		<div class="min-h-0 flex-1 overflow-hidden rounded-lg">
-			<CodeEditor
-				bind:this={codeEditor}
-				value={content}
-				lang="python"
-				{boilerplate}
-				className="text-[0.6875rem]"
-				onChange={(e) => {
-					_content = e;
-					if (!edit) {
-						const fm = extractFrontmatter(e);
-						if (fm.title && !name) {
-							name = formatSkillName(fm.title);
-							id = nameToId(fm.title);
+		<div class="min-h-0 flex-1 overflow-hidden rounded-lg flex flex-col">
+			{#if locale}
+				<PluginTranslations
+					id={edit ? id : ''}
+					kind="function"
+					{locale}
+					bind:translations={meta.i18n}
+				/>
+			{/if}
+			<div class={locale ? 'hidden' : 'h-full'}>
+				<CodeEditor
+					bind:this={codeEditor}
+					value={content}
+					lang="python"
+					{boilerplate}
+					className="text-[0.6875rem]"
+					onChange={(e) => {
+						_content = e;
+						if (!edit) {
+							const fm = extractFrontmatter(e);
+							if (fm.title && !name) {
+								name = formatSkillName(fm.title);
+								id = nameToId(fm.title);
+							}
+							if (fm.description && !meta.description) {
+								meta = { ...meta, description: fm.description };
+							}
 						}
-						if (fm.description && !meta.description) {
-							meta = { ...meta, description: fm.description };
+					}}
+					onSave={async () => {
+						if (formElement) {
+							formElement.requestSubmit();
 						}
-					}
-				}}
-				onSave={async () => {
-					if (formElement) {
-						formElement.requestSubmit();
-					}
-				}}
-			/>
+					}}
+				/>
+			</div>
 		</div>
 
 		<div class="shrink-0 py-2 text-xs text-gray-500">

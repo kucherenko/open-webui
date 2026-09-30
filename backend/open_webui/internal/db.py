@@ -6,7 +6,7 @@ import re
 import sys
 from contextlib import asynccontextmanager, contextmanager
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, Optional
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 from open_webui.env import (
@@ -25,13 +25,16 @@ from open_webui.env import (
     DATABASE_SQLITE_PRAGMA_SYNCHRONOUS,
     DATABASE_SQLITE_PRAGMA_TEMP_STORE,
     DATABASE_URL,
+    ENABLE_DB_MIGRATIONS,
+    OPEN_WEBUI_DIR,
+    USE_SLIM,
 )
 from open_webui.utils.json_codec import JSONCodec
 from sqlalchemy import Dialect, MetaData, create_engine, event, types
 from sqlalchemy.engine.url import make_url
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm import Session, scoped_session, sessionmaker
 from sqlalchemy.pool import NullPool, QueuePool
 from sqlalchemy.sql.type_api import _T
 from typing_extensions import Self
@@ -138,6 +141,17 @@ class JSONField(types.TypeDecorator):  # TEXT-backed JSON storage
 
     def copy(self, **kwargs: Any) -> Self:
         return JSONField(length=self.impl.length)
+
+
+if USE_SLIM:
+    if make_url(DATABASE_URL).get_backend_name() not in ('sqlite', 'postgresql', 'postgres'):
+        raise ValueError(
+            'Slim requires SQLite or PostgreSQL for DATABASE_URL. Use the standard image for other databases.'
+        )
+    if DATABASE_ENABLE_IAM_TOKEN_AUTH:
+        raise ValueError(
+            'AWS RDS IAM authentication requires the standard image. Slim supports PostgreSQL database credentials.'
+        )
 
 
 # Normalize SSL params from the URL once; the sync engine needs them

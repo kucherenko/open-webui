@@ -1,11 +1,30 @@
-import { apiRequest } from '$lib/apis/request';
 import { WEBUI_API_BASE_URL } from '$lib/constants';
 
 export const getGravatarUrl = async (token: string, email: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/utils/gravatar?email=${email}`, {
-		token,
-		getError: (err) => err.detail ?? err
-	});
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/utils/gravatar?email=${email}`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail ?? err;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const executeCode = async (token: string, code: string) => {
@@ -74,33 +93,6 @@ export const formatPythonCode = async (token: string, code: string) => {
 	}
 
 	return res;
-};
-
-export const downloadChatAsPDF = async (token: string, title: string, messages: object[]) => {
-	let error = null;
-
-	const blob = await fetch(`${WEBUI_API_BASE_URL}/utils/pdf`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${token}`
-		},
-		body: JSON.stringify({
-			title: title,
-			messages: messages
-		})
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.blob();
-		})
-		.catch((err) => {
-			console.error(err);
-			error = err;
-			return null;
-		});
-
-	return blob;
 };
 
 export const downloadDatabase = async (token: string) => {

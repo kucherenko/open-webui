@@ -30,8 +30,8 @@
 
 	import ChevronUp from '$lib/components/icons/ChevronUp.svelte';
 	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';
-	import { WEBUI_API_BASE_URL } from '$lib/constants';
-	import { adminFeedbackCount } from '$lib/stores';
+	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
+	import { adminFeedbackCount, config } from '$lib/stores';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Select from '$lib/components/common/Select.svelte';
 	import Check from '$lib/components/icons/Check.svelte';
@@ -321,11 +321,11 @@
 							<th
 								scope="col"
 								class="px-2.5 py-2 font-normal cursor-pointer select-none w-3"
-								on:click={() => setSortKey('user')}
+								on:click={() => setSortKey('username')}
 							>
 								<div class="flex gap-1.5 items-center justify-end">
 									{$i18n.t('User')}
-									{#if orderBy === 'user'}
+									{#if orderBy === 'username'}
 										<span class="font-normal">
 											{#if direction === 'asc'}
 												<ChevronUp className="size-2" />

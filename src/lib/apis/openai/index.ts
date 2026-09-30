@@ -1,5 +1,4 @@
-import { apiRequest } from '$lib/apis/request';
-import { OPENAI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
+import { OPENAI_API_BASE_URL, WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
 
 export const getErrorMessage = (err: any, fallback = 'Server connection failed') => {
 	const detail = err?.detail;
@@ -15,10 +14,31 @@ export const getErrorMessage = (err: any, fallback = 'Server connection failed')
 };
 
 export const getOpenAIConfig = async (token: string = '') => {
-	return apiRequest(`${OPENAI_API_BASE_URL}/config`, {
-		token,
-		getError: getErrorMessage
-	});
+	let error = null;
+
+	const res = await fetch(`${OPENAI_API_BASE_URL}/config`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = getErrorMessage(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 type OpenAIConfig = {
@@ -29,14 +49,34 @@ type OpenAIConfig = {
 };
 
 export const updateOpenAIConfig = async (token: string = '', config: OpenAIConfig) => {
-	return apiRequest(`${OPENAI_API_BASE_URL}/config/update`, {
+	let error = null;
+
+	const res = await fetch(`${OPENAI_API_BASE_URL}/config/update`, {
 		method: 'POST',
-		token,
-		body: {
-			...config
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
 		},
-		getError: getErrorMessage
-	});
+		body: JSON.stringify({
+			...config
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = getErrorMessage(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getOpenAIModelsDirect = async (url: string, key: string) => {
@@ -97,10 +137,30 @@ export const getOpenAIModels = async (token: string, urlIdx?: number) => {
 };
 
 export const getProviderModelCatalog = async (token: string, urlIdx: number) => {
-	return apiRequest(`${OPENAI_API_BASE_URL}/models/${urlIdx}/catalog`, {
-		token,
-		getError: getErrorMessage
-	});
+	let error = null;
+
+	const res = await fetch(`${OPENAI_API_BASE_URL}/models/${urlIdx}/catalog`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = getErrorMessage(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const downloadProviderModel = async (
@@ -174,12 +234,31 @@ export const getProviderModelDownloadStatus = async (
 };
 
 export const loadProviderModel = async (token: string, urlIdx: number, model: string) => {
-	return apiRequest(`${OPENAI_API_BASE_URL}/models/${urlIdx}/load`, {
+	let error = null;
+
+	const res = await fetch(`${OPENAI_API_BASE_URL}/models/${urlIdx}/load`, {
 		method: 'POST',
-		token,
-		body: { model },
-		getError: getErrorMessage
-	});
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({ model })
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = getErrorMessage(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const unloadProviderModel = async (
@@ -188,20 +267,61 @@ export const unloadProviderModel = async (
 	model: string,
 	instanceId?: string
 ) => {
-	return apiRequest(`${OPENAI_API_BASE_URL}/models/${urlIdx}/unload`, {
+	let error = null;
+
+	const res = await fetch(`${OPENAI_API_BASE_URL}/models/${urlIdx}/unload`, {
 		method: 'POST',
-		token,
-		body: { model, ...(instanceId ? { instance_id: instanceId } : {}) },
-		getError: getErrorMessage
-	});
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({ model, ...(instanceId ? { instance_id: instanceId } : {}) })
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = getErrorMessage(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const deleteProviderModel = async (token: string, urlIdx: number, model: string) => {
-	return apiRequest(`${OPENAI_API_BASE_URL}/models/${urlIdx}?${new URLSearchParams({ model })}`, {
-		method: 'DELETE',
-		token,
-		getError: getErrorMessage
-	});
+	let error = null;
+
+	const res = await fetch(
+		`${OPENAI_API_BASE_URL}/models/${urlIdx}?${new URLSearchParams({ model })}`,
+		{
+			method: 'DELETE',
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${token}`
+			}
+		}
+	)
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = getErrorMessage(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const verifyOpenAIConnection = async (
@@ -303,13 +423,31 @@ export const generateOpenAIChatCompletion = async (
 	body: object,
 	url: string = `${WEBUI_BASE_URL}/api`
 ) => {
-	return apiRequest(`${url}/chat/completions`, {
+	let error = null;
+
+	const res = await fetch(`${url}/chat/completions`, {
 		method: 'POST',
-		token,
-		body: body,
+		headers: {
+			Authorization: `Bearer ${token}`,
+			'Content-Type': 'application/json'
+		},
 		credentials: 'include',
-		getError: getErrorMessage
-	});
+		body: JSON.stringify(body)
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = getErrorMessage(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const synthesizeOpenAISpeech = async (

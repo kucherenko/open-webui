@@ -1,4 +1,3 @@
-import { apiRequest } from '$lib/apis/request';
 import { WEBUI_API_BASE_URL } from '$lib/constants';
 
 export const getModelAnalytics = async (
@@ -7,12 +6,36 @@ export const getModelAnalytics = async (
 	endDate: number | null = null,
 	groupId: string | null = null
 ) => {
+	let error = null;
+
 	const searchParams = new URLSearchParams();
 	if (startDate) searchParams.append('start_date', startDate.toString());
 	if (endDate) searchParams.append('end_date', endDate.toString());
 	if (groupId) searchParams.append('group_id', groupId);
 
-	return apiRequest(`${WEBUI_API_BASE_URL}/analytics/models?${searchParams.toString()}`, { token });
+	const res = await fetch(`${WEBUI_API_BASE_URL}/analytics/models?${searchParams.toString()}`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getUserAnalytics = async (
@@ -22,13 +45,37 @@ export const getUserAnalytics = async (
 	limit: number = 50,
 	groupId: string | null = null
 ) => {
+	let error = null;
+
 	const searchParams = new URLSearchParams();
 	if (startDate) searchParams.append('start_date', startDate.toString());
 	if (endDate) searchParams.append('end_date', endDate.toString());
 	if (limit) searchParams.append('limit', limit.toString());
 	if (groupId) searchParams.append('group_id', groupId);
 
-	return apiRequest(`${WEBUI_API_BASE_URL}/analytics/users?${searchParams.toString()}`, { token });
+	const res = await fetch(`${WEBUI_API_BASE_URL}/analytics/users?${searchParams.toString()}`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getMessages = async (
@@ -41,6 +88,8 @@ export const getMessages = async (
 	skip: number = 0,
 	limit: number = 50
 ) => {
+	let error = null;
+
 	const searchParams = new URLSearchParams();
 	if (modelId) searchParams.append('model_id', modelId);
 	if (userId) searchParams.append('user_id', userId);
@@ -50,9 +99,29 @@ export const getMessages = async (
 	if (skip) searchParams.append('skip', skip.toString());
 	if (limit) searchParams.append('limit', limit.toString());
 
-	return apiRequest(`${WEBUI_API_BASE_URL}/analytics/messages?${searchParams.toString()}`, {
-		token
-	});
+	const res = await fetch(`${WEBUI_API_BASE_URL}/analytics/messages?${searchParams.toString()}`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getSummary = async (
@@ -61,14 +130,36 @@ export const getSummary = async (
 	endDate: number | null = null,
 	groupId: string | null = null
 ) => {
+	let error = null;
+
 	const searchParams = new URLSearchParams();
 	if (startDate) searchParams.append('start_date', startDate.toString());
 	if (endDate) searchParams.append('end_date', endDate.toString());
 	if (groupId) searchParams.append('group_id', groupId);
 
-	return apiRequest(`${WEBUI_API_BASE_URL}/analytics/summary?${searchParams.toString()}`, {
-		token
-	});
+	const res = await fetch(`${WEBUI_API_BASE_URL}/analytics/summary?${searchParams.toString()}`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getDailyStats = async (
@@ -78,13 +169,37 @@ export const getDailyStats = async (
 	granularity: 'hourly' | 'daily' = 'daily',
 	groupId: string | null = null
 ) => {
+	let error = null;
+
 	const searchParams = new URLSearchParams();
 	if (startDate) searchParams.append('start_date', startDate.toString());
 	if (endDate) searchParams.append('end_date', endDate.toString());
 	searchParams.append('granularity', granularity);
 	if (groupId) searchParams.append('group_id', groupId);
 
-	return apiRequest(`${WEBUI_API_BASE_URL}/analytics/daily?${searchParams.toString()}`, { token });
+	const res = await fetch(`${WEBUI_API_BASE_URL}/analytics/daily?${searchParams.toString()}`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getTokenUsage = async (
@@ -93,12 +208,36 @@ export const getTokenUsage = async (
 	endDate: number | null = null,
 	groupId: string | null = null
 ) => {
+	let error = null;
+
 	const searchParams = new URLSearchParams();
 	if (startDate) searchParams.append('start_date', startDate.toString());
 	if (endDate) searchParams.append('end_date', endDate.toString());
 	if (groupId) searchParams.append('group_id', groupId);
 
-	return apiRequest(`${WEBUI_API_BASE_URL}/analytics/tokens?${searchParams.toString()}`, { token });
+	const res = await fetch(`${WEBUI_API_BASE_URL}/analytics/tokens?${searchParams.toString()}`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getModelChats = async (
@@ -111,6 +250,8 @@ export const getModelChats = async (
 	orderBy: string | null = null,
 	direction: string | null = null
 ) => {
+	let error = null;
+
 	const searchParams = new URLSearchParams();
 	if (startDate) searchParams.append('start_date', startDate.toString());
 	if (endDate) searchParams.append('end_date', endDate.toString());
@@ -119,18 +260,64 @@ export const getModelChats = async (
 	if (orderBy) searchParams.append('order_by', orderBy);
 	if (direction) searchParams.append('direction', direction);
 
-	return apiRequest(
+	const res = await fetch(
 		`${WEBUI_API_BASE_URL}/analytics/models/${encodeURIComponent(modelId)}/chats?${searchParams.toString()}`,
-		{ token }
-	);
+		{
+			method: 'GET',
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/json',
+				authorization: `Bearer ${token}`
+			}
+		}
+	)
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getModelOverview = async (token: string = '', modelId: string, days: number = 30) => {
+	let error = null;
+
 	const searchParams = new URLSearchParams();
 	searchParams.append('days', days.toString());
 
-	return apiRequest(
+	const res = await fetch(
 		`${WEBUI_API_BASE_URL}/analytics/models/${encodeURIComponent(modelId)}/overview?${searchParams.toString()}`,
-		{ token }
-	);
+		{
+			method: 'GET',
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/json',
+				authorization: `Bearer ${token}`
+			}
+		}
+	)
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };

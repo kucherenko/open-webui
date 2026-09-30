@@ -1,4 +1,3 @@
-import { apiRequest } from '$lib/apis/request';
 import { WEBUI_API_BASE_URL } from '$lib/constants';
 
 export type AutomationTerminalConfig = {
@@ -65,6 +64,8 @@ export const getAutomationItems = async (
 	page: number,
 	folder_id?: string | null
 ): Promise<{ items: AutomationResponse[]; total: number }> => {
+	let error = null;
+
 	const searchParams = new URLSearchParams();
 	if (query) {
 		searchParams.append('query', query);
@@ -79,39 +80,199 @@ export const getAutomationItems = async (
 		searchParams.append('folder_id', folder_id);
 	}
 
-	return apiRequest(`${WEBUI_API_BASE_URL}/automations/list?${searchParams.toString()}`, { token });
+	const res = await fetch(`${WEBUI_API_BASE_URL}/automations/list?${searchParams.toString()}`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const createAutomation = async (token: string, form: AutomationForm) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/automations/create`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/automations/create`, {
 		method: 'POST',
-		token,
-		body: form
-	});
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify(form)
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getAutomationById = async (token: string, id: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/automations/${id}`, { token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/automations/${id}`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const updateAutomationById = async (token: string, id: string, form: AutomationForm) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/automations/${id}/update`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/automations/${id}/update`, {
 		method: 'POST',
-		token,
-		body: form
-	});
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify(form)
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const toggleAutomationById = async (token: string, id: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/automations/${id}/toggle`, { method: 'POST', token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/automations/${id}/toggle`, {
+		method: 'POST',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const runAutomationById = async (token: string, id: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/automations/${id}/run`, { method: 'POST', token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/automations/${id}/run`, {
+		method: 'POST',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const deleteAutomationById = async (token: string, id: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/automations/${id}/delete`, { method: 'DELETE', token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/automations/${id}/delete`, {
+		method: 'DELETE',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getAutomationRuns = async (
@@ -120,7 +281,32 @@ export const getAutomationRuns = async (
 	skip: number = 0,
 	limit: number = 50
 ) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/automations/${id}/runs?skip=${skip}&limit=${limit}`, {
-		token
-	});
+	let error = null;
+
+	const res = await fetch(
+		`${WEBUI_API_BASE_URL}/automations/${id}/runs?skip=${skip}&limit=${limit}`,
+		{
+			method: 'GET',
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/json',
+				authorization: `Bearer ${token}`
+			}
+		}
+	)
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };

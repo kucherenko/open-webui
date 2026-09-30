@@ -1,61 +1,232 @@
-import { apiRequest } from '$lib/apis/request';
 import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
 import type { Banner } from '$lib/types';
 
 export const importConfig = async (token: string, config: object) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/configs/import`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/import`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
 			config: config
-		}
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const exportConfig = async (token: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/configs/export`, { token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/export`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getConnectionsConfig = async (token: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/configs/connections`, { token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/connections`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const setConnectionsConfig = async (token: string, config: object) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/configs/connections`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/connections`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
 			...config
-		}
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getToolServerConnections = async (token: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/configs/tool_servers`, { token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/tool_servers`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const setToolServerConnections = async (token: string, connections: object) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/configs/tool_servers`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/tool_servers`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
 			...connections
-		}
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getTerminalServerConnections = async (token: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/configs/terminal_servers`, { token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/terminal_servers`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const setTerminalServerConnections = async (token: string, connections: object) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/configs/terminal_servers`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/terminal_servers`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
 			...connections
-		}
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 /**
@@ -107,17 +278,37 @@ export const putOrchestratorPolicy = async (
 	policyData: object,
 	authType: string = 'bearer'
 ): Promise<object | null> => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/configs/terminal_servers/policy`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/terminal_servers/policy`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
 			url: url.replace(/\/$/, ''),
 			key,
 			auth_type: authType,
 			policy_id: policyId,
 			policy_data: policyData
-		}
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getOrchestratorPolicy = async (
@@ -155,17 +346,37 @@ export const putOrchestratorLifecycle = async (
 	lifecycleData: object,
 	authType: string = 'bearer'
 ): Promise<object | null> => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/configs/terminal_servers/lifecycle`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/terminal_servers/lifecycle`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
 			url: url.replace(/\/$/, ''),
 			key,
 			auth_type: authType,
 			policy_id: policyId,
 			lifecycle_data: lifecycleData
-		}
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getOrchestratorLifecycle = async (
@@ -209,16 +420,36 @@ export const refreshOrchestratorTerminals = async (
 	},
 	authType: string = 'bearer'
 ): Promise<object | null> => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/configs/terminal_servers/refresh`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/terminal_servers/refresh`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
 			url: url.replace(/\/$/, ''),
 			key,
 			auth_type: authType,
 			...body
-		}
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 /**
@@ -226,23 +457,63 @@ export const refreshOrchestratorTerminals = async (
  * Used for system/admin connections to avoid CORS issues and API key exposure.
  */
 export const verifyTerminalServerConnection = async (token: string, connection: object) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/configs/terminal_servers/verify`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/terminal_servers/verify`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
 			...connection
-		}
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const verifyToolServerConnection = async (token: string, connection: object) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/configs/tool_servers/verify`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/tool_servers/verify`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
 			...connection
-		}
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 type RegisterOAuthClientForm = {
@@ -259,14 +530,34 @@ export const registerOAuthClient = async (
 	formData: RegisterOAuthClientForm,
 	type: null | string = null
 ) => {
+	let error = null;
+
 	const searchParams = type ? `?type=${type}` : '';
-	return apiRequest(`${WEBUI_API_BASE_URL}/configs/oauth/clients/register${searchParams}`, {
+	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/oauth/clients/register${searchParams}`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
 			...formData
-		}
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getOAuthClientAuthorizationUrl = (clientId: string, type: null | string = null) => {
@@ -286,35 +577,144 @@ export const initiateOAuthRedirect = (tool: {
 };
 
 export const getCodeExecutionConfig = async (token: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/configs/code_execution`, { token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/code_execution`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const setCodeExecutionConfig = async (token: string, config: object) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/configs/code_execution`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/code_execution`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
 			...config
-		}
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getModelsDefaults = async (token: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/configs/models/defaults`, { token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/models/defaults`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getModelsConfig = async (token: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/configs/models`, { token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/models`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const setModelsConfig = async (token: string, config: object) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/configs/models`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/models`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
 			...config
-		}
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getSubagentsConfig = async (token: string) => {
@@ -342,26 +742,94 @@ export const setSubagentsConfig = async (token: string, config: object) => {
 	return res.json();
 };
 
-export const setDefaultPromptSuggestions = async (token: string, promptSuggestions: string) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/configs/suggestions`, {
+export const setDefaultPromptSuggestions = async (
+	token: string,
+	promptSuggestions: any[] | null,
+	promptSuggestionsI18n: Record<string, any> = {}
+) => {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/suggestions`, {
 		method: 'POST',
-		token,
-		body: {
-			suggestions: promptSuggestions
-		}
-	});
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
+			suggestions: promptSuggestions,
+			i18n: promptSuggestionsI18n
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const getBanners = async (token: string): Promise<Banner[]> => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/configs/banners`, { token });
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/banners`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };
 
 export const setBanners = async (token: string, banners: Banner[]) => {
-	return apiRequest(`${WEBUI_API_BASE_URL}/configs/banners`, {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/configs/banners`, {
 		method: 'POST',
-		token,
-		body: {
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
 			banners: banners
-		}
-	});
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 };

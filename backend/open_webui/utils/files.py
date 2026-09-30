@@ -8,6 +8,10 @@ from typing import Optional
 
 import aiofiles
 from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Request,
     UploadFile,
 )
 from open_webui.env import (
@@ -15,6 +19,7 @@ from open_webui.env import (
     AIOHTTP_CLIENT_SESSION_SSL,
     ENABLE_IMAGE_CONTENT_TYPE_EXTENSION_FALLBACK,
 )
+from open_webui.models.chats import Chats
 from open_webui.models.files import Files
 from open_webui.retrieval.web.utils import get_ssrf_safe_session, validate_url
 from open_webui.routers.files import upload_file_handler
@@ -27,6 +32,7 @@ from open_webui.storage.provider import Storage
 
 BASE64_IMAGE_URL_PREFIX = re.compile(r'data:image/\w+;base64,', re.IGNORECASE)
 MARKDOWN_IMAGE_URL_PATTERN = re.compile(r'!\[(.*?)\]\((.+?)\)', re.IGNORECASE)
+FILE_CONTENT_URL_PATTERN = re.compile(r'^/api/v1/files/([^/?#]+)/content(?:[?#]|$)')
 
 # Extension-based MIME fallback, only used when ENABLE_IMAGE_CONTENT_TYPE_EXTENSION_FALLBACK is True.
 _IMAGE_MIME_FALLBACK = {
@@ -69,9 +75,16 @@ async def get_image_base64_from_url(url: str, user=None) -> Optional[str]:
             # rebinding DNS answer that passed validate_url cannot reach an internal address.
             async with get_ssrf_safe_session() as session:
                 async with session.get(
-                    url, ssl=AIOHTTP_CLIENT_SESSION_SSL, allow_redirects=AIOHTTP_CLIENT_ALLOW_REDIRECTS
+                    url,
+                    ssl=AIOHTTP_CLIENT_SESSION_SSL,
+                    allow_redirects=AIOHTTP_CLIENT_ALLOW_REDIRECTS,
+                    headers={'Accept-Encoding': 'identity'},
                 ) as response:
                     response.raise_for_status()
+                    # Accept-Encoding is only a request; the sender can still compress and pick our decompressed size.
+                    encodings = response.headers.getall('Content-Encoding', ())
+                    if any(encoding.lower() not in ('', 'identity') for encoding in encodings):
+                        return None
                     image_data = bytearray()
                     total = 0
                     async for chunk in response.content.iter_chunked(64 * 1024):
@@ -85,7 +98,8 @@ async def get_image_base64_from_url(url: str, user=None) -> Optional[str]:
         else:
             # Non-URL string — treat as file_id. Delegate to the canonical
             # file-ID resolver which enforces ownership/access checks.
-            return await get_image_base64_from_file_id(url, user=user)
+            file_id_match = FILE_CONTENT_URL_PATTERN.match(url)
+            return await get_image_base64_from_file_id(file_id_match.group(1) if file_id_match else url, user=user)
 
     except Exception:
         return None

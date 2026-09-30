@@ -1,6 +1,7 @@
 <script lang="ts">
+	import { toast } from 'svelte-sonner';
 	import { createEventDispatcher } from 'svelte';
-	import { getContext } from 'svelte';
+	import { onMount, getContext } from 'svelte';
 
 	import Modal from '../../common/Modal.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';

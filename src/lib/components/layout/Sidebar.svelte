@@ -37,7 +37,7 @@
 	} from '$lib/stores/chatList';
 	import { onMount, getContext, tick, onDestroy } from 'svelte';
 
-	const i18n = getContext('i18n');
+	const i18n: any = getContext('i18n');
 
 	$: canImportChats = $user?.role === 'admin' || ($user?.permissions?.chat?.import ?? true);
 
@@ -47,6 +47,8 @@
 		getChatById,
 		updateChatFolderIdById,
 		importChats,
+		deleteAllChats,
+		getChatListBySearchText,
 		markChatsRead
 	} from '$lib/apis/chats';
 	import {
@@ -55,7 +57,7 @@
 		getSharedFolders,
 		updateFolderParentIdById
 	} from '$lib/apis/folders';
-	import { getPinnedNoteList } from '$lib/apis/notes';
+	import { createNewNote, getPinnedNoteList, toggleNotePinnedStatusById } from '$lib/apis/notes';
 	import { updateUserSettings } from '$lib/apis/users';
 	import { createNoteHandler } from '$lib/components/notes/utils';
 	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
@@ -187,11 +189,11 @@
 
 	const getMenuItemMeta = (id) => {
 		const items = {
-			notes: { label: 'Notes', href: '/notes', iconType: 'note' },
-			workspace: { label: 'Workspace', href: '/workspace', iconType: 'workspace' },
-			automations: { label: 'Automations', href: '/automations', iconType: 'automations' },
-			calendar: { label: 'Calendar', href: '/calendar', iconType: 'calendar' },
-			playground: { label: 'Playground', href: '/playground', iconType: 'playground' }
+			notes: { label: $i18n.t('Notes'), href: '/notes', iconType: 'note' },
+			workspace: { label: $i18n.t('Workspace'), href: '/workspace', iconType: 'workspace' },
+			automations: { label: $i18n.t('Automations'), href: '/automations', iconType: 'automations' },
+			calendar: { label: $i18n.t('Calendar'), href: '/calendar', iconType: 'calendar' },
+			playground: { label: $i18n.t('Playground'), href: '/playground', iconType: 'playground' }
 		};
 		return items[id];
 	};
@@ -229,7 +231,7 @@
 					current.splice(oldIndex, 1);
 					current.splice(newIndex, 0, itemId);
 					settings.set({ ...$settings, pinnedMenuItems: current });
-					await updateUserSettings(localStorage.token, { ui: $settings });
+					await updateUserSettings(localStorage.token, { ui: { pinnedMenuItems: current } });
 				}
 			});
 		}
@@ -304,7 +306,7 @@
 		folders = folderMap;
 	};
 
-	const createFolder = async ({ name, data, parent_id }) => {
+	const createFolder = async ({ name, data, meta, parent_id }) => {
 		name = name?.trim();
 		if (!name) {
 			toast.error($i18n.t('Folder name cannot be empty.'));
@@ -341,6 +343,7 @@
 		const res = await createNewFolder(localStorage.token, {
 			name,
 			data,
+			meta,
 			parent_id
 		}).catch((error) => {
 			toast.error(`${error}`);

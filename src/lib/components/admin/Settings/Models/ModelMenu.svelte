@@ -18,7 +18,7 @@
 	import GlobeAlt from '$lib/components/icons/GlobeAlt.svelte';
 	import LockClosed from '$lib/components/icons/LockClosed.svelte';
 
-	import { pinnedModels } from '$lib/stores';
+	import { config, pinnedModels, settings } from '$lib/stores';
 	import Link from '$lib/components/icons/Link.svelte';
 
 	const i18n = getContext('i18n');
@@ -197,7 +197,7 @@
 				<div class="flex items-center">{$i18n.t('Copy Link')}</div>
 			</button>
 
-			{#if model?.is_active ?? true}
+			{#if (model?.is_active ?? true) && model?.owned_by !== 'arena'}
 				<button
 					class="select-none flex w-full gap-2 items-center h-[1.6875rem] px-2 text-[0.8125rem] font-normal cursor-pointer hover:bg-gray-50/40 dark:hover:bg-gray-800/40 rounded-xl"
 					on:click={() => runAndClose(cloneHandler)}
